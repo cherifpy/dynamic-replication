@@ -1,0 +1,140 @@
+---
+job_name: test_conf
+user_id: csimohammed
+exp_env: debian11-min
+exp_walltime: 05:00:00
+execution_local: False
+machines:
+  - cluster: paravance
+    nodes: 1
+    roles: [A]
+    storage: 512
+  - cluster: paravance
+    nodes: 1
+    roles: [B]
+    storage: 512
+  - cluster: paravance
+    nodes: 1
+    roles: [C]
+    storage: 512
+  - cluster: paravance
+    nodes: 1
+    roles: [D]
+    storage: 512
+  - cluster: paravance
+    nodes: 1
+    roles: [E]
+    storage: 512
+  - cluster: paravance
+    nodes: 1
+    roles: [F]
+    storage: 512
+  - cluster: paravance
+    nodes: 1
+    roles: [G]
+    storage: 512
+  - cluster: paravance
+    nodes: 1
+    roles: [H]
+    storage: 512
+  - cluster: paravance
+    nodes: 1
+    roles: [I]
+    storage: 512
+  - cluster: paravance
+    nodes: 1
+    roles: [J]
+    storage: 512
+  - cluster: paravance
+    nodes: 1
+    roles: [K]
+    storage: 512
+
+network_constraints:
+  - default_delay: 300ms
+    default_rate: 1gbit
+    constraints: 
+      - src: K 
+        dst: A
+        delay: 60ms
+        symmetric: True
+      - src: K 
+        dst: B
+        delay: 50ms
+        symmetric: True
+      - src: K 
+        dst: C
+        delay: 31ms
+        symmetric: True
+      - src: K 
+        dst: D
+        delay: 60ms
+        symmetric: True
+      - src: K 
+        dst: E
+        delay: 60ms
+        symmetric: True
+      - src: K 
+        dst: F
+        delay: 45ms
+        symmetric: True
+      - src: K 
+        dst: H
+        delay: 50ms
+        symmetric: True
+      - src: K 
+        dst: I
+        delay: 30ms
+        symmetric: True
+      - src: K 
+        dst: J
+        delay: 30ms
+        symmetric: True
+      - src: A 
+        dst: B
+        delay: 10ms
+        symmetric: True
+      - src: A 
+        dst: C
+        delay: 20ms
+        symmetric: True
+      - src: B
+        dst: C
+        delay: 20ms
+        symmetric: True
+      - src: C 
+        dst: D
+        delay: 20ms
+        symmetric: True
+      - src: D 
+        dst: E
+        delay: 20ms
+        symmetric: True
+      - src: E 
+        dst: F
+        delay: 20ms
+        symmetric: True
+      - src: E 
+        dst: J
+        delay: 20ms
+        symmetric: True
+      - src: J
+        dst: G
+        delay: 20ms
+        symmetric: True
+      - src: F
+        dst: H
+        delay: 20ms
+        symmetric: True
+      - src: F
+        dst: G
+        delay: 20ms
+        symmetric: True
+      - src: H
+        dst: I
+        delay: 20ms
+        symmetric: True
+      - src: I
+        dst: J
+        delay: 20ms
+        symmetric: True
