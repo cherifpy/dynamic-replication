@@ -124,11 +124,11 @@ if True:
                 p.apt(name=["git","python3-pip"], state="present")
                 """p.command(
                     task_name = "Delete the last version of the repo",
-                    cmd = "rm -rf /home/csimohammed/dynamic-replication"
+                    cmd = "rm -rf /home/csimohammed/code"
                 )"""
                 p.command(
                     task_name="clone repo",
-                    cmd="git clone https://github.com/cherifpy/dynamic-replication.git /home/csimohammed/"
+                    cmd="git clone https://github.com/cherifpy/dynamic-replication.git /home/csimohammed/code"
                 )
                 p.command(
                     task_name = "installing python libs",
@@ -143,7 +143,7 @@ if True:
                 """with config.enoslib.actions(roles=config.roles[machine["roles"][0]]) as p:
                     p.command(
                         task_name = "Executing the code on a site",
-                        cmd = f"python3 /home/csimohammed/exp/cache-exp/replicaManager.py > /tmp/output{i}_and_errors.log 2>&1",
+                        cmd = f"python3 /home/csimohammed/code/dynamic-replication/dynamic_replication/replicaManager.py > /tmp/output{i}_and_errors.log 2>&1",
                         background=True
                     )
                 print(IPS_ADDRESS[i])
@@ -154,7 +154,7 @@ if True:
                 with config.enoslib.actions(roles=config.roles[machine["roles"][0]]) as p:
                     p.command(
                         task_name = "Executing the code on a site",
-                        cmd = f"python3 /home/csimohammed/exp/cache-exp/cacheManager.py > /tmp/output{i}_and_errors.log 2>&1",
+                        cmd = f"python3 /home/csimohammed/code/dynamic-replication/dynamic_replication/cacheManager.py > /tmp/output{i}_and_errors.log 2>&1",
                         background=True
                     )
                 print(data)
