@@ -3,14 +3,12 @@ import pickle
 import socket
 import time
 PORT_FOR_OPENING_SOCKET = 8888
-
 """ 
     J'aurais besoin de ca pour envoyer les données vers chaqu'un des nodes au debut de l'exp
 
 """
-
 def sendObject(obj:object, ip:str):
-    time.sleep(3)
+    time.sleep(5)
     #serialize the object
     data = pickle.dumps(obj)
     # Envoi via un socket
@@ -27,11 +25,8 @@ def recieveObject():
         s.listen()
         #attendre une connexion
         conn, addr = s.accept()
-        
         data = conn.recv(5120)
-        
         objet_recu = pickle.loads(data)
-        
         s.close()
 
         return objet_recu
