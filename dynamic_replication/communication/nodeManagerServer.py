@@ -8,7 +8,7 @@ from flask import Flask, request, jsonify
 from communication.messages import Task
 from queue import Queue
 from experiments.params import EXECUTION_LOCAL
-from client import RedisClient, NodeClient
+from redisClient import RedisClient
 import multiprocessing
 
 class NodeManagerServer:
