@@ -9,7 +9,7 @@ import logging
 
 class Configuration:
 
-    def __init__(self, cluster = None, config_file_path="/", memcached_listening_port=11211):
+    def __init__(self, cluster = None, config_file_path="/", BD_LISTENING_PORT=11211):
         """
             classe constructor is used to create an instence of the class
             i dont know if i have to remove the param = cluster
@@ -38,7 +38,7 @@ class Configuration:
         self.nb_sites = len(self.machines)
         self.python_libs:list = None
         self.enoslib = None if self.execution_local else en #en
-        self.memcached_listening_port = memcached_listening_port
+        self.BD_LISTENING_PORT = BD_LISTENING_PORT
         
         if not self.execution_local:
             self.enoslib.init_logging(level=logging.INFO)
@@ -79,7 +79,7 @@ class Configuration:
             p.apt(name=['memcached'],state="present",)
             p.command(
                     task_name="Start memcached with a pecifique config",
-                    cmd=f"memcached -m {15} -I {5}m -l 0.0.0.0 -p {self.memcached_listening_port} -u nobody -M", 
+                    cmd=f"memcached -m {15} -I {5}m -l 0.0.0.0 -p {self.BD_LISTENING_PORT} -u nobody -M", 
                     background=True
                 )
         return True
@@ -105,7 +105,7 @@ class Configuration:
                 p.command(task_name="change max value size memcached",cmd="memcached -I 120m", background=True)"""
                 p.command(
                     task_name="Start memcached with a pecifique config",
-                    cmd=f"memcached -m {1024} -I {int(machine['storage'])//2}m -l 0.0.0.0 -p {self.memcached_listening_port} -u nobody", 
+                    cmd=f"memcached -m {1024} -I {int(machine['storage'])//2}m -l 0.0.0.0 -p {self.BD_LISTENING_PORT} -u nobody", 
                     background=True
                 )
                 
@@ -120,7 +120,7 @@ class Configuration:
             p.apt(name=['redis-server'],state="present",)
             p.command(
                     task_name="Start redis with a pecifique config",
-                    cmd=f"redis-server --bind 0.0.0.0 --protected-mode no --maxmemory {storage}mb --port {self.memcached_listening_port}", 
+                    cmd=f"redis-server --bind 0.0.0.0 --protected-mode no --maxmemory {storage}mb --port {self.BD_LISTENING_PORT}", 
                     background=True
                 )
         return True

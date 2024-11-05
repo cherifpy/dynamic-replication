@@ -4,7 +4,7 @@ import copy
 import redis
 from experiments.params import  (
     SERVER_REPLICA_MANAGER_PORT, 
-    MEMCACHED_LISTENING_PORT,
+    BD_LISTENING_PORT,
     MAX_EXECUTION_TIME,
     NB_REPLICAS_INIT,
     MAX_DATA_SIZE,
@@ -135,9 +135,9 @@ class JobInjector:
             p.write(os.urandom(file_size_octet))
         with open(file_name, "rb") as p:
             content = p.read()
-        servers = [f"{ip_node}:{MEMCACHED_LISTENING_PORT}"]  # Adresse du serveur Memcached
+        servers = [f"{ip_node}:{BD_LISTENING_PORT}"]  # Adresse du serveur Memcached
         
-        client = redis.Redis(host=ip_node, port=MEMCACHED_LISTENING_PORT, db=0, decode_responses=True)
+        client = redis.Redis(host=ip_node, port=BD_LISTENING_PORT, db=0, decode_responses=True)
         self.last_node_recieved = ip_node
         try:
             r = client.set(f"{self.dataset_counter}", content)

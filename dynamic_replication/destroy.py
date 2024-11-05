@@ -1,7 +1,7 @@
 from configurations.configuration import Configuration
 from experiments.params import (
     PATH_TO_CONFIG_FILE, 
-    MEMCACHED_LISTENING_PORT,
+    BD_LISTENING_PORT,
 )
 
 config = Configuration(

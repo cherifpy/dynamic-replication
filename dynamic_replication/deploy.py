@@ -4,10 +4,9 @@ from configurations.configuration import Configuration
 from communication.send_data import sendObject
 from experiments.params import (
     REP_PORT,
-    PATH_TO_TASKS, 
     PATH_TO_CONFIG_FILE, 
     SERVER_REPLICA_MANAGER_PORT,
-    MEMCACHED_LISTENING_PORT,
+    BD_LISTENING_PORT,
     STORAGE_SPACE
 )
 
@@ -68,8 +67,8 @@ if True:
     #netem = config.setNetworkConstraintes()
 
     ## deplot memcached
-    #config.deployMemcached(port=MEMCACHED_LISTENING_PORT)
-    config.deployRedis(port=MEMCACHED_LISTENING_PORT, storage= STORAGE_SPACE)
+    #config.deployMemcached(port=BD_LISTENING_PORT)
+    config.deployRedis(port=BD_LISTENING_PORT, storage= STORAGE_SPACE)
 
     NB_NODES = config.nb_sites
     CONFIG_GRAPHE = config.getGraphe()

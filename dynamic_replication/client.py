@@ -7,7 +7,7 @@ import requests
 import multiprocessing 
 import time
 from experiments.params import (
-    MEMCACHED_LISTENING_PORT,  
+    BD_LISTENING_PORT,  
     EXECUTION_LOCAL, 
 )
 
@@ -114,9 +114,9 @@ class RedisClient:
         with open(file_name, "rb") as p:
             content = p.read()
         
-        servers = [f"{ip_dst}:{MEMCACHED_LISTENING_PORT}"]  # Adresse du serveur Memcached
+        servers = [f"{ip_dst}:{BD_LISTENING_PORT}"]  # Adresse du serveur Memcached
 
-        r = redis.Redis(host=ip_dst, port=MEMCACHED_LISTENING_PORT, db=0, decode_responses=True)
+        r = redis.Redis(host=ip_dst, port=BD_LISTENING_PORT, db=0, decode_responses=True)
 
         try:
             s = r.set(id_dataset, content)
@@ -133,13 +133,13 @@ class RedisClient:
     
     #TODO en cas de modification de politique d'eviction
     def accessData(self, id_dataset):
-        client = redis.Redis(host='0.0.0.0', port=MEMCACHED_LISTENING_PORT,db=0)
+        client = redis.Redis(host='0.0.0.0', port=BD_LISTENING_PORT,db=0)
         value = client.get(id_dataset) if not EXECUTION_LOCAL else True
         
         return True if value else False
 
     def getKeys(self):
-        r = redis.Redis(host='0.0.0.0', port=MEMCACHED_LISTENING_PORT,db=0, decode_responses=True)
+        r = redis.Redis(host='0.0.0.0', port=BD_LISTENING_PORT,db=0, decode_responses=True)
         keys = r.keys('*')
         return keys
 
@@ -147,13 +147,13 @@ class RedisClient:
         if EXECUTION_LOCAL:
             return [("0", {"used_memory":f'{self.memory_used}',"maxmemory":f'{self.storage_size}'})]
 
-        r = redis.Redis(host='0.0.0.0', port=MEMCACHED_LISTENING_PORT,db=0)
+        r = redis.Redis(host='0.0.0.0', port=BD_LISTENING_PORT,db=0)
         memory_info = r.info('memory')
         stats = [('this',memory_info)]
         return stats
     
     def checkOnCacheMemorie(self, id_data):
-        client = redis.Redis(host='0.0.0.0', port=MEMCACHED_LISTENING_PORT, db=0)
+        client = redis.Redis(host='0.0.0.0', port=BD_LISTENING_PORT, db=0)
         s = client.exists(id_data)
         return True if s == 1 else False
     
@@ -165,7 +165,7 @@ class RedisClient:
 
     def connectToRedis(self):
         try:
-            self.client = redis.Redis(host='0.0.0.0', port=MEMCACHED_LISTENING_PORT, db=0)
+            self.client = redis.Redis(host='0.0.0.0', port=BD_LISTENING_PORT, db=0)
             return self.client
         except Exception as e:
             print(f"Error connecting to Redis: {e}")
@@ -179,7 +179,7 @@ class RedisClient:
             return True
         try:
 
-            client = redis.Redis(host='0.0.0.0', port=MEMCACHED_LISTENING_PORT, db=0,decode_responses=True)
+            client = redis.Redis(host='0.0.0.0', port=BD_LISTENING_PORT, db=0,decode_responses=True)
             r = client.delete(key)
             return True
             #ca retourne une exption la 
