@@ -2,32 +2,34 @@ import sys
 import os
 import threading
 import requests
+import time
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from flask import Flask, request, jsonify
 from communication.messages import Task
 from queue import Queue
-import multiprocessing
-import importlib.util
-from dynamic_replication.nodeManager import NodeManager
 from experiments.params import EXECUTION_LOCAL
+from client import RedisClient, NodeClient
+import multiprocessing
 
 class NodeManagerServer:
-    def __init__(self,storage_space, id_node,neighbors:dict, host='localhost', port=8888):
+    def __init__(self,storage_space, id_node,neighbors:dict, node_client, host='localhost', port=8888):
         self.app = Flask(__name__)
         self.host = host
         self.port = port
         self.recieved_task = Queue()
         self.setup_routes()
-        self.node_manager = NodeManager(storage_space, id_node)
+        self.node_manager = RedisClient(storage_space, id_node)
+        self.node_client = node_client
         self.neighbors = neighbors
         self.nb_requests_processed = {}
+        self.processes = []
         
         
         self.client = self.node_manager.connectToRedis()
         if self.client != None:
-            self.writeOutput("connected to memecached\n")
+            self.writeOutput("connected to redis\n")
         else:
-            self.writeOutput("not connected to memecached\n")
+            self.writeOutput("not connected to redis\n")
     
     def setup_routes(self):
         
@@ -77,17 +79,17 @@ class NodeManagerServer:
                 "id_dataset": data['id_dataset']
             }
 
-            b1 = self.node_manager.checkOnCacheMemorie(task.id_dataset)
-            b2, condidates = self.node_manager.predictEviction(task.ds_size)
-            if b1:
-                processed_data = {"sendData":False, "eviction":False}
+            b1 = self.node_manager.checkOnCacheMemorie(task["id_dataset"])
+            
+            if not b1:
+                processed_data = {"sendData":True}
+            
             else:
-                
-                processed_data = {"sendData":True, "eviction":b2, "condidates":condidates}
+                pid = self.node_client.startTask(task['execution_time'])
+                self.writeOutput(f"Job {task['job_id']} started on node")
 
-            self.writeOutput(f"task recieved {str(task)} asking th controller to send the data:{not b1}\n")
-            while task.id_dataset in self.node_manager.last_recently_used_item: self.node_manager.last_recently_used_item.remove(task.id_dataset)
-            self.node_manager.last_recently_used_item.append(task.id_dataset)
+                processed_data = {"sendData":False, "PID": pid}
+    
             return jsonify(processed_data)
         
         #used
@@ -124,29 +126,6 @@ class NodeManagerServer:
             return jsonify(data)
         
         #used
-        @self.app.route("/access-data", methods=['GET'])
-        def ckeckData():
-            stats = self.node_manager.getStats()[0][1]
-            self.node_manager.memory_used = int(stats["used_memory"])
-            id_ds = request.args.get("id_dataset")
-            b = self.node_manager.accessData(id_ds)
-
-            return jsonify({
-                "reponse":b,
-                "remaining_space":int(stats["maxmemory"]) - int(stats["used_memory"])
-                })
-        
-        @self.app.route("/get-infos-for-evection", methods=["GET"])
-        def infoForEvection():
-
-            stats = self.node_manager.getStats()[0][1]
-            self.node_manager.memory_used = int(stats["used_memory"])
-            return jsonify({
-                "remaining_space":int(stats["maxmemory"]) - int(stats["used_memory"]),
-                'last_recently_used': self.node_manager.last_recently_used_item
-            })
-
-        #used
         @self.app.route('/transfert', methods=['POST'])
         def transfert():
             data = request.json
@@ -160,31 +139,6 @@ class NodeManagerServer:
             
             return jsonify(processed_data)
         
-        #TODO
-        @self.app.route('/send-and-deleteCopie', methods=["GET"])
-        def sendAndDelete2():
-            id_ds = request.args.get("id_dataset")
-            ip_dst_node = request.args.get("ip_dst_node")
-            ds_size = request.args.get("ds_size")
-            port_dst = request.args.get("port_dst_node")
-
-            b = self.node_manager.deleteFromCache(id_ds, ds_size=ds_size)
-            self.writeOutput(b)
-            if b:
-                t,e = self.node_manager.sendDataSetTo(
-                    ip_dst=ip_dst_node,
-                    id_dataset=id_ds,
-                    size_ds=ds_size
-                    )
-                if not e is None:
-                    self.writeOutput(f"{e}")
-                stats = self.node_manager.getStats()[0][1]
-                self.node_manager.memory_used = int(stats["used_memory"])
-                response = {"sended":t, "remaining_space":int(stats["maxmemory"]) - int(stats["used_memory"])}
-            else:
-                response = {"sended":b}
-
-            return jsonify(response)
         
         @self.app.route('/send-and-delete', methods=["GET"])
         def sendAndDelete():
@@ -211,34 +165,7 @@ class NodeManagerServer:
                 response = {"sended":t}
 
             return jsonify(response)
-        #TODO
-        @self.app.route("/send-to", methods=["POST"])
-        def transertTo():
-            data = request.json
-            path = data["path"]
-            
-            r,_ = self.node_manager.sendDataSetTo(
-                ip_dst=data["dst_ip"],
-                id_dataset=data["id_dataset"],
-                size_ds=data["size_ds"],
-            ) 
-            n = path.pop()
-            if n != self.node_manager.id_node: return jsonify({"response": False})
-            if n == self.node_manager.id_node and len(path) != 1:
-                pass
 
-            elif n == self.node_manager.id_node and len(path) == 1:
-                #ici si il reste que le distinataire donc envoyer vers le memcached
-                r,_ = self.node_manager.sendDataSetTo(
-                    ip_dst=self.neighbors[n]["ip"],
-                    id_dataset=data["id_dataset"],
-                    size_ds=data["size_ds"],
-                ) 
-                pass
-
-            processed_data = {"response":r}
-            
-            return jsonify(processed_data)
         
         @self.app.route('/add-data', methods=['POST'])
         def add_data():
@@ -312,6 +239,7 @@ class NodeManagerServer:
             
             return jsonify(processed_data)
     
+    
     def addRequest(self,id_dataset):
         if id_dataset in self.nb_requests_processed.keys():
             self.nb_requests_processed[id_dataset] +=1
@@ -323,8 +251,7 @@ class NodeManagerServer:
             return True
         except :
             return False  
-
-        
+    
     def writeOutput(self, str):
         out = open(f"/tmp/log_{self.node_manager.id_node}.txt",'a')
         out.write(f"{str}")

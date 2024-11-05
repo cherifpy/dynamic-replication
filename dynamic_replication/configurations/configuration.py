@@ -4,10 +4,8 @@ import yaml
 import numpy as np
 import requests
 import json
-import time
 import enoslib as en
 import logging 
-import copy 
 
 class Configuration:
 

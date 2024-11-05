@@ -4,7 +4,7 @@ import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from classes.djikstra import djikstra
-from exp.params import BANDWIDTH
+from experiments.params import BANDWIDTH
 import numpy as np
 import copy
 

@@ -2,7 +2,7 @@ import subprocess
 import time
 from configurations.configuration import Configuration
 from communication.send_data import sendObject
-from params import (
+from experiments.params import (
     REP_PORT,
     PATH_TO_TASKS, 
     PATH_TO_CONFIG_FILE, 
@@ -16,9 +16,9 @@ def run_command(command):
     result = subprocess.run(command.split(), capture_output=True, text=True)
     print(result)
 
-def InfosToSend(id_peer:int,graphe_info,ip_address, rep_port, cache_size):
+def InfosToSend(id_peer:int,graphe_info,ip_address, rep_port, storage_size):
     data = {}
-    data["CACHE_SIZE"] = cache_size*1024*1024 #touche pas a ca
+    data["STORAGE_SIZE"] = storage_size*1024*1024 #touche pas a ca
     data["infos"] = []
     data["SITE_ID"] = id_peer
     data["REP_PORT"] = rep_port + id_peer
@@ -62,7 +62,6 @@ if True:
 
     config = Configuration(
         config_file_path = PATH_TO_CONFIG_FILE,
-        memcached_listening_port=MEMCACHED_LISTENING_PORT
     )
     
     provider = config.setReservation()
@@ -149,8 +148,7 @@ if True:
                         background=True
                     )
                 print(IPS_ADDRESS[i])
-                sendObject(data, IPS_ADDRESS[i])"""
-                
+                sendObject(data, IPS_ADDRESS[i])"""  
 
             else: 
                 data = InfosToSend(i,CONFIG_GRAPHE, IPS_ADDRESS,REP_PORT,config.storage_capacities[i])
@@ -169,24 +167,3 @@ if True:
             infos_nodes.append({"node_ip":IPS_ADDRESS[i], "node_port":port_rep})
             port_rep += 1
 
-        """print("Waiting for Outputs:")
-        count = 0
-        time.sleep(60)
-
-        while True:
-            print(count)
-            if count == config.nb_sites:
-                break
-
-            for i, machine in enumerate(config.machines): 
-                try:
-                    with config.enoslib.actions(roles=config.roles[machine["roles"][0]]) as p:
-                        p.fetch(src=f"/tmp/log_{i}.txt", dest="~")  
-                        #p.fetch(src=f"/tmp/log_{i}.err", dest="~")
-                        #p.fetch(src=f"/tmp/log_{i}.out", dest="~")    
-                    print("Output fetched")
-                    count +=1                    
-                except Exception:
-                    continue
-        """
-        

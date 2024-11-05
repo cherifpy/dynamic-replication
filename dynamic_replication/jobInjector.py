@@ -4,20 +4,19 @@ import copy
 import redis
 from experiments.params import  (
     SERVER_REPLICA_MANAGER_PORT, 
-    SERVER_REPLICA_MANAGER_PORT, 
     MEMCACHED_LISTENING_PORT,
-    MAX_NB_TASKS,
-    MAX_DATA_SIZE,
     MAX_EXECUTION_TIME,
-    NB_JOBS,
     NB_REPLICAS_INIT,
-    NB_NODES
-
+    MAX_DATA_SIZE,
+    MAX_NB_TASKS,
+    BANDWIDTH,
+    NB_NODES,
+    NB_JOBS,
 )
 
 from communication.send_data import recieveObject
 from communication.messages import Task
-from communication.replicaManagerServer import ReplicaManagerServer
+from dynamic_replication.communication.JobInjectorServer import ReplicaManagerServer
 
 from classes.data import Data
 from classes.replica import Replica
@@ -34,11 +33,9 @@ import threading
 import random
 
 class JobInjector:
-
-    def __init__(self,nb_nodes ,traces_path,graphe, ip, local_execution) -> None:
+    def __init__(self,nb_nodes ,graphe, ip, local_execution) -> None:
         self.nb_nodes = nb_nodes-1
         self.id = nb_nodes-1
-        #self.traces_path = PATH_TO_TASKS#"/Users/cherif/Documents/Traveaux/traces-simulator/cache-exp/exp/traces/random_subset.csv"
         self.nodes_infos = dict()
         self.api_server = None
         self.graphe_infos = graphe
@@ -68,9 +65,9 @@ class JobInjector:
     def start(self,):
         if not self.nodes_infos:
             return False
-        traces = pd.read_csv(self.traces_path)
-
+        
         for i_job in range(NB_JOBS):
+            time.sleep(5)
             self.dataset_counter += 1
             job_id, job = self.generateJob() # (nb_tasks, execution_time, file_size)
             host_nodes = self.selectHostsNodes()
@@ -86,6 +83,8 @@ class JobInjector:
                     id_dataset: Any
                 """
                 self.sendTaskToNode(host, job_id, job[1],self.dataset_counter)
+            
+            
 
 
 
@@ -128,7 +127,7 @@ class JobInjector:
         return added
             
     
-    def sendDataSet(self,ip_node, ds_size):
+    def sendDataSet(self,id_node, ip_node, id_ds, ds_size):
 
         file_name = '/tmp/tmp.bin'
         file_size_octet = int(ds_size)*1024
@@ -141,12 +140,11 @@ class JobInjector:
         client = redis.Redis(host=ip_node, port=MEMCACHED_LISTENING_PORT, db=0, decode_responses=True)
         self.last_node_recieved = ip_node
         try:
-            r = client.set(self.dataset_counter, content)
+            r = client.set(f"{self.dataset_counter}", content)
             print(f'ajouter {r}\n')
             return True
         except:
             return False
-        return not r 
 
 
 
@@ -163,15 +161,28 @@ class JobInjector:
         url = f'http://{ip}:{port}/execut'
         
         response = requests.post(url, json=data)
+        print(f"reponse recu {response.json()}")
         return response.json(), self.graphe_infos[id][id_node]
     
+    
+    def transfertCost(self, latency, data_size):
+        bandwith_in_bits = BANDWIDTH*1024*1024*8
+        size_in_bits = data_size*1024*8
+        latency_in_s = latency/1000
+
+        return latency_in_s + (size_in_bits/bandwith_in_bits)
     
     def writeTransfert(self,str):
         path = "/tmp/transfert.txt"
         self.transfert = open(path,'a')
         self.transfert.write(str)
         self.transfert.close()
-
+    
+    def writeOutput(self, str):
+        self.output = open(f"/tmp/log.txt",'a')
+        self.output.write(str)
+        self.output.close() 
+        
 if __name__ == "__main__":
 
     data = recieveObject()

@@ -1,94 +1,12 @@
-from communication.messages import SendObject, RequestObject, Task
-
-import pickle
-import queue
-from communication.nodeManagerServer import NodeManagerServer
-import requests
-import multiprocessing 
-import time
-from experiments.params import (
-    MEMCACHED_LISTENING_PORT,  
-    EXECUTION_LOCAL, 
-)
-
 import numpy as np
+from experiments.params import MEMCACHED_LISTENING_PORT, EXECUTION_LOCAL
 import redis
 import os
 import copy 
 import re
 import threading
 
-
-class NodeClient(object):
-
-    def __init__(self, id, storage_space,listner_port,neighbors, data_manager_ip,data_manager_port,host):
-        self.id_node = id
-        self.host = host
-        self.storage_space = storage_space
-        self.time_limite = 0
-        self.neighbors = neighbors
-        self.listner_port = listner_port   
-        self.future_task = queue.Queue()
-        self.server_is_running = False
-        self.data_manager_ip = data_manager_ip
-        self.data_manager_port = data_manager_port
-        self.processes_working = None
-        self.node_server = NodeManagerServer(
-            storage_space=self.storage_space,
-            id_node=self.id_node,
-            host=self.host,
-            port=self.listner_port,
-            neighbors=neighbors,
-            node_client = self
-        )
-
-    def start(self):
-        self.server_is_running = self.node_server.run()
-        return True    
-
-    def startTask(self,execution_time):
-        p = multiprocessing.Process(target=self.task, args=(self, execution_time))
-        self.processes_working = p
-        p.start()
-        return p
-    
-    def task(self,execution_time):
-        time.sleep(execution_time)
-        self.processes_working = None
-        return "Done"
-        
-    """    
-    def startManagerFlaskServer(self, cache):
-        self.node_server = NodeManagerServer(cache,host=self.host,port=self.listner_port)
-        self.server_is_running = self.node_server.run()
-    
-
-    def startThread(self):
-        flask_process = multiprocessing.Process(target=self.startManagerFlaskServer)
-        flask_process.start()
-        time.sleep(0.2)
-        return flask_process
-    """
-   
-   
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-class RedisClient:
-
+class NodeManager:
     def __init__(self, storage_size, node_id):
         self.id_node = node_id
         self.storage_size = storage_size
@@ -129,6 +47,7 @@ class RedisClient:
         sending_process = threading.Thread(target=self.sendDataSetTo, args=(ip_dst,id_dataset,size_ds))
         #sending_process = multiprocessing.Process(target=self.sendDataSet, args=[ip_node, id_dataset, ds_size])
         sending_process.start()
+
         return sending_process
     
     #TODO en cas de modification de politique d'eviction
@@ -145,13 +64,28 @@ class RedisClient:
 
     def getStats(self, verbos=False):
         if EXECUTION_LOCAL:
-            return [("0", {"used_memory":f'{self.memory_used}',"maxmemory":f'{self.storage_size}'})]
+            return [("0", {"used_memory":f'{self.memory_used}',"maxmemory":f'{self.cache_size}'})]
 
         r = redis.Redis(host='0.0.0.0', port=MEMCACHED_LISTENING_PORT,db=0)
         memory_info = r.info('memory')
         stats = [('this',memory_info)]
         return stats
     
+    def predictEviction(self,ds_size):
+
+        #ds_size_bytes = ((int(ds_size)+51 20)*1 024)
+        ds_size_bytes = int(ds_size)*1024
+        cache_size_bytes = self.cache_size
+        stats = self.getStats()[0][1]
+
+        used_memory = int(stats["used_memory"])
+        
+        if int(used_memory)+ds_size_bytes > (cache_size_bytes):
+            #return True, self.last_recently_used_item
+            return True, self.getKeys()
+        
+        return False, None
+
     def checkOnCacheMemorie(self, id_data):
         client = redis.Redis(host='0.0.0.0', port=MEMCACHED_LISTENING_PORT, db=0)
         s = client.exists(id_data)
@@ -162,6 +96,25 @@ class RedisClient:
         while id_data in self.ids_data: self.ids_data.remove(id_data)
         self.ids_data.append(id_data)
         return True
+    
+    def migrateData(self, id_ds, ds_size,ip_dst_node):
+
+        b = self.deleteFromCache(id_ds)
+        self.writeOutput(b)
+        if b:
+            t = self.sendDataSetTo(
+                ip_dst=ip_dst_node,
+                id_dataset=id_ds,
+                size_ds=ds_size
+                )
+            
+            stats = self.getStats()[0][1]
+            #self.memory_used = int(stats["used_memory"])
+            response = {"sended":t, "remaining_space":int(stats["maxmemory"]) - (int(stats["used_memory"]))}
+        else:
+            response = {"sended":b}
+        
+        return response
 
     def connectToRedis(self):
         try:
@@ -190,3 +143,23 @@ class RedisClient:
         except Exception as e:
             print(f"Error deleting from Memcached: {e}")
             return False
+
+
+    def getCacheSpaceUsed(self):
+        try:
+            stats = self.get_memcache_stats(self.client)
+            if stats:
+                used_memory = int(stats.get('bytes', 0))
+                return used_memory
+            else:
+                return None
+        except Exception as e:
+            print(f"Error calculating Memcached space used: {e}")
+            return None
+
+    def checkExistence(client, key):
+        result = client.get(key)
+        if result:
+            return True
+        else: False
+

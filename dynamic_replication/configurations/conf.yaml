@@ -53,53 +53,29 @@ network_constraints:
         dst: B
         delay: 100ms
         symmetric: True
-      - src: A 
-        dst: B
-        delay: 50ms                                                 
-        symmetric: True
-      - src: A 
+      - src: I 
         dst: C
         delay: 60ms
         symmetric: True
-      - src: A 
-        dst: E
-        delay: 100ms
-        symmetric: True
-      - src: B 
+      - src: I
         dst: D
         delay: 30ms
         symmetric: True
-      - src: B 
-        dst: C
-        delay: 40ms
-        symmetric: True
-      - src: B 
+      - src: I
         dst: E
-        delay: 80ms
+        delay: 100ms
         symmetric: True
-      - src: E 
+      - src: I 
         dst: F
         delay: 20ms
         symmetric: True
-      - src: E 
+      - src: I 
         dst: G
         delay: 20ms
         symmetric: True
-      - src: E 
+      - src: I 
         dst: H
         delay: 20ms
-        symmetric: True
-      - src: E 
-        dst: C
-        delay: 50ms
-        symmetric: True
-      - src: F 
-        dst: G
-        delay: 10ms
-        symmetric: True
-      - src: G 
-        dst: H
-        delay: 10ms
         symmetric: True
 
 
