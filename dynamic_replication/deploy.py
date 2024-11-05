@@ -122,13 +122,13 @@ if True:
             with config.enoslib.actions(roles=config.roles[machine["roles"][0]]) as p:
                 #p.ensure_python()
                 p.apt(name=["git","python3-pip"], state="present")
-                p.command(
+                """p.command(
                     task_name = "Delete the last version of the repo",
                     cmd = "rm -rf /home/csimohammed/dynamic-replication"
-                )
+                )"""
                 p.command(
                     task_name="clone repo",
-                    cmd="git clone --single-branch --branch main https://github.com/cherifpy/dynamic-replication.git /home/csimohammed"
+                    cmd="git https://github.com/cherifpy/dynamic-replication.git"
                 )
                 p.command(
                     task_name = "installing python libs",
