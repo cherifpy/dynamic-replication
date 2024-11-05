@@ -158,7 +158,8 @@ if True:
                         background=True
                     )
                 print(data)
-                sendObject(data, IPS_ADDRESS[i])
+                print(f"address IP {data['IP_ADDRESS']}")
+                sendObject(data, data["IP_ADDRESS"])
                 
             
             #config.enoslib.ensure_python3(True,roles=config.roles[machine["roles"][0]])
