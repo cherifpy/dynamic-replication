@@ -155,7 +155,7 @@ if True:
                     p.command(
                         task_name = "Executing the code on a site",
                         cmd = f"python3 /home/csimohammed/code/dynamic-replication/dynamic_replication/nodeManager.py > /tmp/output{i}_and_errors.log 2>&1",
-                        background=True
+                        background=False
                     )
                 print(data)
                 print(f"address IP {data['IP_ADDRESS']}")
