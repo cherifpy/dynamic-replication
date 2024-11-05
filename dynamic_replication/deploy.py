@@ -128,7 +128,7 @@ if True:
                 )"""
                 p.command(
                     task_name="clone repo",
-                    cmd="git https://github.com/cherifpy/dynamic-replication.git"
+                    cmd="git clone https://github.com/cherifpy/dynamic-replication.git"
                 )
                 p.command(
                     task_name = "installing python libs",
