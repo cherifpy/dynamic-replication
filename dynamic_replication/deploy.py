@@ -124,15 +124,15 @@ if True:
                 p.apt(name=["git","python3-pip"], state="present")
                 p.command(
                     task_name = "Delete the last version of the repo",
-                    cmd = "rm -rf /home/csimohammed/exp"
+                    cmd = "rm -rf /home/csimohammed/dynamic-replication"
                 )
                 p.command(
                     task_name="clone repo",
-                    cmd="git clone --single-branch --branch new_main https://github.com/cherifpy/traces-simulator.git /home/csimohammed/exp"
+                    cmd="git clone https://github.com/cherifpy/dynamic-replication.git"
                 )
                 p.command(
                     task_name = "installing python libs",
-                    cmd = "pip3 install pandas pylibmc numpy sockets PyYAML Flask pymemcache redis numpy scikit-learn"
+                    cmd = "pip3 install pandas numpy sockets PyYAML Flask redis numpy"
                 )
             
             
