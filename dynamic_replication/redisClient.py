@@ -2,7 +2,6 @@ from communication.messages import SendObject, RequestObject, Task
 
 import pickle
 import queue
-from communication.nodeManagerServer import NodeManagerServer
 import requests
 import multiprocessing 
 import time
