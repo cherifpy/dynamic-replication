@@ -154,7 +154,7 @@ if True:
                 with config.enoslib.actions(roles=config.roles[machine["roles"][0]]) as p:
                     p.command(
                         task_name = "Executing the code on a site",
-                        cmd = f"python3 /home/csimohammed/code/dynamic-replication/dynamic_replication/cacheManager.py > /tmp/output{i}_and_errors.log 2>&1",
+                        cmd = f"python3 /home/csimohammed/code/dynamic-replication/dynamic_replication/nodeManager.py > /tmp/output{i}_and_errors.log 2>&1",
                         background=True
                     )
                 print(data)
