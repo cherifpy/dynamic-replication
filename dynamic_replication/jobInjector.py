@@ -71,7 +71,7 @@ class JobInjector:
             host_nodes = self.selectHostsNodes()
 
             for host in host_nodes:
-                self.replicate(host, job_id, self.dataset_counter, job[3])
+                self.replicate(host, job_id, self.dataset_counter, job[2])
 
             for host in host_nodes:
                 """
