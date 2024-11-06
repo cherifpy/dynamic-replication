@@ -15,8 +15,6 @@ from experiments.params import  (
 )
 
 from communication.send_data import recieveObject
-from communication.messages import Task
-from dynamic_replication.communication.JobInjectorServer import ReplicaManagerServer
 
 from classes.data import Data
 from classes.replica import Replica
@@ -73,7 +71,7 @@ class JobInjector:
             host_nodes = self.selectHostsNodes()
 
             for host in host_nodes:
-                self.replicate(host, job_id, self.dataset_counter, job)
+                self.replicate(host, job_id, self.dataset_counter, job[3])
 
             for host in host_nodes:
                 """
