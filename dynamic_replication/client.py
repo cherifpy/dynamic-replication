@@ -6,10 +6,6 @@ from communication.nodeManagerServer import NodeManagerServer
 import requests
 import multiprocessing 
 import time
-from experiments.params import (
-    BD_LISTENING_PORT,  
-    EXECUTION_LOCAL, 
-)
 
 import numpy as np
 import redis
