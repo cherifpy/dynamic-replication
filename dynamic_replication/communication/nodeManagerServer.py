@@ -9,11 +9,10 @@ from communication.messages import Task
 from queue import Queue
 from experiments.params import EXECUTION_LOCAL
 from redisClient import RedisClient
-from client import NodeClient
 import multiprocessing
 
 class NodeManagerServer:
-    def __init__(self,storage_space, id_node,neighbors:dict, node_client: NodeClient, host='localhost', port=8888):
+    def __init__(self,storage_space, id_node,neighbors:dict, node_client, host='localhost', port=8888):
         self.app = Flask(__name__)
         self.host = host
         self.port = port
