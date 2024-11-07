@@ -65,14 +65,16 @@ class JobInjector:
             return False
         
         for i_job in range(NB_JOBS):
+            print(f"Job {i_job}")
             time.sleep(5)
             self.dataset_counter += 1
             job_id, job = self.generateJob() # (nb_tasks, execution_time, file_size)
             host_nodes = self.selectHostsNodes()
 
             for host in host_nodes:
-                self.replicate(host, job_id, self.dataset_counter, job[2])
-
+                r = self.replicate(host, job_id, self.dataset_counter, job[2])
+                if r: print("Replica sended")
+                else: print("no replica sended")
             for host in host_nodes:
                 """
                     id_node: Any,
