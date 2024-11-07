@@ -66,7 +66,7 @@ class JobInjector:
         
         for i_job in range(NB_JOBS):
             print(f"Job {i_job}")
-            time.sleep(5)
+            time.sleep(2)
             self.dataset_counter += 1
             job_id, job = self.generateJob() # (nb_tasks, execution_time, file_size)
             host_nodes = self.selectHostsNodes()
@@ -159,7 +159,7 @@ class JobInjector:
         
         response = requests.post(url, json=data)
         print(f"reponse recu {response.json()}")
-        return response.json(), self.graphe_infos[id][id_node]
+        return response.json(), self.graphe_infos[self.id][id_node]
     
     
     def transfertCost(self, latency, data_size):

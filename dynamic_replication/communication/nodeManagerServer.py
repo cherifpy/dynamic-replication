@@ -85,10 +85,10 @@ class NodeManagerServer:
                 processed_data = {"sendData":True, "PID": None}
             
             else:
-                #pid = self.node_client.startTask(task['execution_time'])
+                pid = self.node_client.startTask(task['execution_time'])
                 self.writeOutput(f"Job {task['job_id']} started on node")
 
-                processed_data = {"sendData":False, "PID": None}
+                processed_data = {"sendData":False, "PID": pid}
     
             return jsonify(processed_data)
         
