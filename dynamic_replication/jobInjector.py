@@ -84,9 +84,6 @@ class JobInjector:
                 """
                 self.sendTaskToNode(host, job_id, job[1],self.dataset_counter)
             
-            
-
-
 
     def generateJob(self,):
         nb_tasks = random.randint(1, MAX_NB_TASKS)

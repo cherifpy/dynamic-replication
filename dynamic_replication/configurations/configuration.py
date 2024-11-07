@@ -115,7 +115,7 @@ class Configuration:
         if self.execution_local:
             return False
 
-        print("storage restriction using memcached for All nodes ")
+        print("storage restriction using redis for All nodes ")
         with self.enoslib.actions(roles=self.roles) as p: 
             p.apt(name=['redis-server'],state="present",)
             p.command(

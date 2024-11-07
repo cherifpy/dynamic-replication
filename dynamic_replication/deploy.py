@@ -68,8 +68,8 @@ if True:
 
     ## deplot memcached
     #config.deployMemcached(port=BD_LISTENING_PORT)
-    config.deployRedis(port=BD_LISTENING_PORT, storage= STORAGE_SPACE)
-
+    rep =config.deployRedis(port=BD_LISTENING_PORT, storage= STORAGE_SPACE)
+    print("installation de redis:", rep)
     NB_NODES = config.nb_sites
     CONFIG_GRAPHE = config.getGraphe()
     IPS_ADDRESS = config.getAllIPs()
