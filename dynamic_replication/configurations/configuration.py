@@ -111,10 +111,13 @@ class Configuration:
                 
 
                 #
-    def deployRedis(self, port=5555, storage=90):
+    def deployRedis(self, port=5555, storage=90, eviction=False):
         self.db_listening_port = port 
         if self.execution_local:
             return False
+        
+        if not eviction: command = f"redis-server --bind 0.0.0.0 --protected-mode no --maxmemory {storage}mb --port {self.db_listening_port}" 
+        else: command = f"redis-server --bind 0.0.0.0 --protected-mode no --maxmemory {storage}mb --port {self.db_listening_port} --maxmemory-policy allkeys-lru"
 
         print("storage restriction using redis for All nodes ")
         with self.enoslib.actions(roles=self.roles) as p: 

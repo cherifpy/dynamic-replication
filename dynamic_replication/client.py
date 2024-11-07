@@ -46,7 +46,7 @@ class NodeClient(object):
         p = multiprocessing.Process(target=self.task, args=(self, execution_time))
         self.processes_working = p
         p.start()
-        return p
+        return p.pid
     
     def task(self,execution_time):
         time.sleep(execution_time)

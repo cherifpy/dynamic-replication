@@ -75,14 +75,16 @@ class JobInjector:
                 r = self.replicate(host, job_id, self.dataset_counter, job[2])
                 if r: print("Replica sended")
                 else: print("no replica sended")
-            for host in host_nodes:
+
+            for i,host in enumerate(host_nodes):
                 """
                     id_node: Any,
                     job_id: Any,
                     execution_time: Any,
                     id_dataset: Any
                 """
-                self.sendTaskToNode(host, job_id, job[1],self.dataset_counter)
+                rep, latency = self.sendTaskToNode(host, job_id, job[1],self.dataset_counter)
+                
             
 
     def generateJob(self,):
@@ -92,9 +94,18 @@ class JobInjector:
 
         self.jobs_list[self.nb_jobs] = (nb_tasks, execution_time, file_size)
         self.nb_jobs +=1
-        
-        return self.nb_jobs-1, (nb_tasks, execution_time, file_size)
+        execution_times = []
+
+        for i in range(nb_tasks):
+            execution_time.append(random.randint(1, MAX_EXECUTION_TIME))
+
+        return self.nb_jobs-1, (nb_tasks, execution_time, file_size) #(nb_tasks, execution_times, file_size) 
     
+    def checkIfNeedForAddingReplication(self,job, hosts):
+
+        pass
+
+
 
     def selectHostsNodes(self):
         availabel_nodes = self.getAvailabledNodes()

@@ -9,10 +9,11 @@ from communication.messages import Task
 from queue import Queue
 from experiments.params import EXECUTION_LOCAL
 from redisClient import RedisClient
+from client import NodeClient
 import multiprocessing
 
 class NodeManagerServer:
-    def __init__(self,storage_space, id_node,neighbors:dict, node_client, host='localhost', port=8888):
+    def __init__(self,storage_space, id_node,neighbors:dict, node_client: NodeClient, host='localhost', port=8888):
         self.app = Flask(__name__)
         self.host = host
         self.port = port
@@ -82,13 +83,13 @@ class NodeManagerServer:
             b1 = self.node_manager.checkOnCacheMemorie(task["id_dataset"])
             
             if not b1:
-                processed_data = {"sendData":True, "PID": None}
+                processed_data = {"sendData":True, "started": False, "PID": None}
             
             else:
                 pid = self.node_client.startTask(task['execution_time'])
                 self.writeOutput(f"Job {task['job_id']} started on node")
 
-                processed_data = {"sendData":False, "PID": pid}
+                processed_data = {"sendData":False, "started": True,  "PID": pid}
     
             return jsonify(processed_data)
         
