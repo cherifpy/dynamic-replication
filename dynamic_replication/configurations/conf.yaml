@@ -1,5 +1,5 @@
 ---
-job_name: data_migration
+job_name: dynamic_replication
 user_id: csimohammed
 exp_env: debian11-min
 exp_walltime: 01:30:00
