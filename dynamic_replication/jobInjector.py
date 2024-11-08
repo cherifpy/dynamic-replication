@@ -69,12 +69,12 @@ class JobInjector:
         
         job_id, job = self.generateJob() # (nb_tasks, execution_time, file_size)
         self.waiting_list.append((job_id,job))
-
+        j = 0
         while True:
             
-            j = 0
+            
             while j < len(self.waiting_list):
-
+                job_started = False
                 print(f"Job {job_id}")
                 job_id, job = self.waiting_list[j]
                 self.dataset_counter += 1
@@ -94,16 +94,23 @@ class JobInjector:
                         id_dataset: Any
                     """
                     rep, latency = self.sendTaskToNode(host, job_id, job.execution_times,job.id_dataset)
-                    if rep['starting_time']:
+                    if rep['started'] and rep['starting_time']:
                         print(f"========= Task of job {job_id} started")
-                    job.stating_times.append(rep['starting_time'])
+                        self.executing_task.append(job_id, host, rep['starting_time'],job.execution_times)
+                        job.ids_nodes.append(host)
+                        job_started = True
+                    job.starting_times.append(rep['starting_time'])
                     job.nb_task_not_lunched -=1
-                print("========= Job started")
-                #self.waiting_list.append(job)
-                self.running_job[job_id] = job
-                 
-                j+=1
+                if job_started:
+                    print("========= Job started")
+                    #self.waiting_list.append(job)
+                    self.running_job[job_id] = job
+
+                    j+=1
             self.updateRunningJobsList()
+            if len(self.running_job.keys()) ==0:
+                print("========= All jobs executed")
+                break
 
 
     def updateRunningJobsList(self,):
@@ -112,15 +119,19 @@ class JobInjector:
             end = False
             job = self.running_job[job_id]
             for i in range(len(job.starting_times)):
-                if job.starting_times[i] + job.executin_times < time.time():
+                if job.starting_times[i] + job.execution_times < time.time():
                     print(f"========= task on job {job_id} finished")
-                    end = True
                     if job.nb_task_not_lunched > 0:
-                        print(f"========= other task on job {job_id} started")
+                        end = False
                         rep, latency = self.sendTaskToNode(job.ids_nodes[i],job_id,job.execution_times,job.id_dataset)
                         if rep["started"]:
                             job.nb_task_not_lunched -=1
                             job.starting_times[i] = rep['starting_time']
+                            print(f"========= other task on job {job_id} started")
+                    else:
+                        print(f"========= job {job_id} finished")
+                        job.finishing_time = time.time()
+                        end = True
                 else:
                     end = False
             if end: delete.append(job_id)
@@ -134,7 +145,7 @@ class JobInjector:
     def generateJob(self,):
         self.id_dataset +=1
         nb_tasks = 6 #random.randint(1, MAX_NB_TASKS)
-        file_size = 1024*1024 #random.randint(1, MAX_DATA_SIZE)
+        file_size = 1024 #random.randint(1, MAX_DATA_SIZE)
         execution_time = 5 #random.randint(1, MAX_EXECUTION_TIME)
 
         
@@ -152,7 +163,7 @@ class JobInjector:
         )
         self.jobs_list[self.nb_jobs] = job
         self.nb_jobs +=1
-        return job.jd, job#(nb_tasks, execution_times, file_size) 
+        return job.id, job#(nb_tasks, execution_times, file_size) 
     
     def checkIfNeedForAddingReplication(self,job, hosts):
         for index, job in enumerate(self.waiting_list):
@@ -176,7 +187,7 @@ class JobInjector:
 
     def getAvailabledNodes(self):
         nodes = [id for id in range(self.nb_nodes)]
-        for i, task in self.executing_task:
+        for i, task in enumerate(self.executing_task):
             time_second = time.time()
             if int(time_second - task[2]) < task[3] and task[1] in nodes:
                 nodes.remove(task[1])
@@ -255,7 +266,15 @@ class JobInjector:
         
 if __name__ == "__main__":
 
-    data = recieveObject()
+    data =  {'IP_ADDRESS': '172.16.97.9', 'graphe_infos': [[ -1.,  -1.,  -1.,  -1.,  -1.,  -1.,  -1.,  -1., 100.],
+       [  0.,  -1.,  -1.,  -1.,  -1.,  -1.,  -1.,  -1., 100.],
+       [  0.,   0.,  -1.,  -1.,  -1.,  -1.,  -1.,  -1.,  60.],
+       [  0.,   0.,   0.,  -1.,  -1.,  -1.,  -1.,  -1.,  30.],
+       [  0.,   0.,   0.,   0.,  -1.,  -1.,  -1.,  -1., 100.],
+       [  0.,   0.,   0.,   0.,   0.,  -1.,  -1.,  -1.,  20.],
+       [  0.,   0.,   0.,   0.,   0.,   0.,  -1.,  -1.,  20.],
+       [  0.,   0.,   0.,   0.,   0.,   0.,   0.,  -1.,  20.],
+       [100., 100.,  60.,  30., 100.,  20.,  20.,  20.,  -1.]], 'IPs_ADDRESS': ['172.16.97.19', '172.16.97.2', '172.16.97.27', '172.16.97.4', '172.16.97.5', '172.16.97.6', '172.16.97.7', '172.16.97.8'], 'infos': {0: {'latency': 100.0, 'id': 0, 'node_ip': '172.16.97.19', 'node_port': 8880}, 1: {'latency': 100.0, 'id': 1, 'node_ip': '172.16.97.2', 'node_port': 8881}, 2: {'latency': 60.0, 'id': 2, 'node_ip': '172.16.97.27', 'node_port': 8882}, 3: {'latency': 30.0, 'id': 3, 'node_ip': '172.16.97.4', 'node_port': 8883}, 4: {'latency': 100.0, 'id': 4, 'node_ip': '172.16.97.5', 'node_port': 8884}, 5: {'latency': 20.0, 'id': 5, 'node_ip': '172.16.97.6', 'node_port': 8885}, 6: {'latency': 20.0, 'id': 6, 'node_ip': '172.16.97.7', 'node_port': 8886}, 7: {'latency': 20.0, 'id': 7, 'node_ip': '172.16.97.8', 'node_port': 8887}}} #recieveObject()
 
     
     job_injector = JobInjector(

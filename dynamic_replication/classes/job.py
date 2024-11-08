@@ -2,7 +2,7 @@
 
 class Job:
     nb_job = 0 
-    def __init__(self, id, nb_task, execution_times, id_dataset, size_dataset):
+    def __init__(self, nb_task, execution_times, id_dataset, size_dataset):
         """
             nb_task
             execution_times
@@ -16,8 +16,9 @@ class Job:
         self.size_dataset = size_dataset 
         self.nb_task_not_lunched = nb_task
         self.job_finished = False
-        self.stating_times = []
+        self.starting_times = []
         self.ids_nodes = []
+        self.finishing_time = 0
 
     @classmethod
     def createJob():
