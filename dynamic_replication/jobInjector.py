@@ -19,6 +19,7 @@ from communication.send_data import recieveObject
 from classes.data import Data
 from classes.replica import Replica
 from classes.djikstra import djikstra
+from classes.job import Job
 
 from typing import Optional, Dict
 import multiprocessing 
@@ -58,54 +59,112 @@ class JobInjector:
         self.jobs_list = {} 
         self.dataset_counter = 0
         self.nb_jobs = 0
+        self.id_dataset = 0
+        self.running_job = {}
 
 
     def start(self,):
         if not self.nodes_infos:
             return False
         
-        for i_job in range(NB_JOBS):
-            print(f"Job {i_job}")
-            time.sleep(2)
-            self.dataset_counter += 1
-            job_id, job = self.generateJob() # (nb_tasks, execution_time, file_size)
-            host_nodes = self.selectHostsNodes()
+        job_id, job = self.generateJob() # (nb_tasks, execution_time, file_size)
+        self.waiting_list.append((job_id,job))
 
-            for host in host_nodes:
-                r = self.replicate(host, job_id, self.dataset_counter, job[2])
-                if r: print("Replica sended")
-                else: print("no replica sended")
+        while True:
+            
+            j = 0
+            while j < len(self.waiting_list):
 
-            for i,host in enumerate(host_nodes):
-                """
-                    id_node: Any,
-                    job_id: Any,
-                    execution_time: Any,
-                    id_dataset: Any
-                """
-                rep, latency = self.sendTaskToNode(host, job_id, job[1],self.dataset_counter)
+                print(f"Job {job_id}")
+                job_id, job = self.waiting_list[j]
+                self.dataset_counter += 1
                 
+                host_nodes = self.selectHostsNodes()
+
+                for i, host in enumerate(host_nodes):
+                    r = self.replicate(host, job_id, job.id_dataset, job.size_dataset)
+                    if r: print(f"{i+1} Replica sended")
+                    else: print("no replica sended")
+
+                for i,host in enumerate(host_nodes):
+                    """
+                        id_node: Any,
+                        job_id: Any,
+                        execution_time: Any,
+                        id_dataset: Any
+                    """
+                    rep, latency = self.sendTaskToNode(host, job_id, job.execution_times,job.id_dataset)
+                    if rep['starting_time']:
+                        print(f"========= Task of job {job_id} started")
+                    job.stating_times.append(rep['starting_time'])
+                    job.nb_task_not_lunched -=1
+                print("========= Job started")
+                #self.waiting_list.append(job)
+                self.running_job[job_id] = job
+                 
+                j+=1
+            self.updateRunningJobsList()
+
+
+    def updateRunningJobsList(self,):
+        delete = []
+        for job_id in self.running_job.keys():
+            end = False
+            job = self.running_job[job_id]
+            for i in range(len(job.starting_times)):
+                if job.starting_times[i] + job.executin_times < time.time():
+                    print(f"========= task on job {job_id} finished")
+                    end = True
+                    if job.nb_task_not_lunched > 0:
+                        print(f"========= other task on job {job_id} started")
+                        rep, latency = self.sendTaskToNode(job.ids_nodes[i],job_id,job.execution_times,job.id_dataset)
+                        if rep["started"]:
+                            job.nb_task_not_lunched -=1
+                            job.starting_times[i] = rep['starting_time']
+                else:
+                    end = False
+            if end: delete.append(job_id)
+        for id in delete :
+            del self.running_job[id]
+
+        return True
+        
             
 
     def generateJob(self,):
-        nb_tasks = random.randint(1, MAX_NB_TASKS)
-        file_size = random.randint(1, MAX_DATA_SIZE)
-        execution_time = random.randint(1, MAX_EXECUTION_TIME)
+        self.id_dataset +=1
+        nb_tasks = 6 #random.randint(1, MAX_NB_TASKS)
+        file_size = 1024*1024 #random.randint(1, MAX_DATA_SIZE)
+        execution_time = 5 #random.randint(1, MAX_EXECUTION_TIME)
 
-        self.jobs_list[self.nb_jobs] = (nb_tasks, execution_time, file_size)
-        self.nb_jobs +=1
+        
+        
         execution_times = []
 
         for i in range(nb_tasks):
-            execution_time.append(random.randint(1, MAX_EXECUTION_TIME))
+            execution_times.append(random.randint(1, MAX_EXECUTION_TIME))
 
-        return self.nb_jobs-1, (nb_tasks, execution_time, file_size) #(nb_tasks, execution_times, file_size) 
+        job = Job(
+            nb_task=nb_tasks,
+            execution_times=execution_time,
+            id_dataset=self.id_dataset,
+            size_dataset=file_size
+        )
+        self.jobs_list[self.nb_jobs] = job
+        self.nb_jobs +=1
+        return job.jd, job#(nb_tasks, execution_times, file_size) 
     
     def checkIfNeedForAddingReplication(self,job, hosts):
+        for index, job in enumerate(self.waiting_list):
+            if job.nb_task_not_lunched != 0:
+                #here lancer les autres tache si ya moyenne sinon attendre 
+                pass
+            else:
+                self.waiting_list.pop(index)
 
+    def addReplica(self,job_id):
+        job = self.jobs_list[job_id]
         pass
-
-
 
     def selectHostsNodes(self):
         availabel_nodes = self.getAvailabledNodes()
@@ -170,6 +229,9 @@ class JobInjector:
         
         response = requests.post(url, json=data)
         print(f"reponse recu {response.json()}")
+        if response.json()["started"]:#(job, node, start_time, execution_time)
+            self.executing_task.append((job_id, int(id_node), response.json()['starting_time']))
+
         return response.json(), self.graphe_infos[self.id][id_node]
     
     
