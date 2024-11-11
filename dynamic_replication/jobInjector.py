@@ -20,6 +20,7 @@ from classes.data import Data
 from classes.replica import Replica
 from classes.djikstra import djikstra
 from classes.job import Job
+from classes.task import Task
 
 from typing import Optional, Dict
 import multiprocessing 
@@ -80,27 +81,36 @@ class JobInjector:
                 self.dataset_counter += 1
                 
                 host_nodes = self.selectHostsNodes()
-
+                host_with_replica = []
                 for i, host in enumerate(host_nodes):
+                    
                     r = self.replicate(host, job_id, job.id_dataset, job.size_dataset)
-                    if r: print(f"{i+1} Replica sended")
+                    if r: 
+                        print(f"{i+1} Replica sended")
+                        host_with_replica.append(host)
+                        job.tasks_list[i].host_node = host
                     else: print("no replica sended")
 
-                for i,host in enumerate(host_nodes):
+                for i,host in enumerate(host_with_replica):
                     """
                         id_node: Any,
                         job_id: Any,
                         execution_time: Any,
                         id_dataset: Any
                     """
+                    
                     rep, latency = self.sendTaskToNode(host, job_id, job.execution_times,job.id_dataset)
                     if rep['started'] and rep['starting_time']:
                         print(f"========= Task of job {job_id} started")
-                        self.executing_task.append(job_id, host, rep['starting_time'],job.execution_times)
+                        job.executing_tasks.append(job.tasks_list[i])
+                        self.executing_tasks.append(i)
+                        self.executing_task.append((job_id, host, rep['starting_time'],job.execution_times))
                         job.ids_nodes.append(host)
                         job_started = True
+                        
                     job.starting_times.append(rep['starting_time'])
                     job.nb_task_not_lunched -=1
+                
                 if job_started:
                     print("========= Job started")
                     #self.waiting_list.append(job)
@@ -148,8 +158,6 @@ class JobInjector:
         file_size = 1024 #random.randint(1, MAX_DATA_SIZE)
         execution_time = 5 #random.randint(1, MAX_EXECUTION_TIME)
 
-        
-        
         execution_times = []
 
         for i in range(nb_tasks):
@@ -161,6 +169,9 @@ class JobInjector:
             id_dataset=self.id_dataset,
             size_dataset=file_size
         )
+
+        self.tasks_list = [Task(f'task_{i}', execution_time, self.id_dataset) for i in range(nb_tasks)]
+
         self.jobs_list[self.nb_jobs] = job
         self.nb_jobs +=1
         return job.id, job#(nb_tasks, execution_times, file_size) 

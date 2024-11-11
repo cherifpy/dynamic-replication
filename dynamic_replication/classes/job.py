@@ -18,7 +18,9 @@ class Job:
         self.job_finished = False
         self.starting_times = []
         self.ids_nodes = []
+        self.tasks_list = []
         self.finishing_time = 0
+        self.executing_tasks = []
 
     @classmethod
     def createJob():
