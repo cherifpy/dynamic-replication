@@ -7,3 +7,6 @@ class Task:
         self.execution_time = execution_time
         self.id_dataset = id_dataset   
         self.host_node = -1
+        self.starting_time = None
+        self.is_finished = False
+        self.executed = False
