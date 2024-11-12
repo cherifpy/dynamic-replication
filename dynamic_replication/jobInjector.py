@@ -137,7 +137,7 @@ class JobInjector:
         for job_id in self.running_job.keys():
             end = False
             job = self.running_job[job_id]
-            for i, task_id in job.executing_tasks:
+            for i, task_id in enumerate(job.executing_tasks):
                 task = job.tasks_list[i]
                 if not task.is_finished and task.starting_time + task.execution_time < time.time(): 
                     print(f"========= task on job {job_id} finished")
@@ -164,6 +164,7 @@ class JobInjector:
                 else:
                     end = False
             if end: delete.append(job_id)
+
         for id in delete :
             print(f"========= job {job_id} finished")
             job = self.running_job[id]
@@ -177,7 +178,7 @@ class JobInjector:
         for job_id in self.running_job.keys():
             end = False
             job = self.running_job[job_id]
-            for i, task_id in job.executing_tasks:
+            for i, task_id in enumerate(job.executing_tasks):
                 task = job.tasks_list[i]
                 if not task.is_finished and task.starting_time + task.execution_time < time.time():
                     print(f"========= task on job {job_id} finished")
@@ -217,31 +218,32 @@ class JobInjector:
             del self.running_job[id]
         return True
     
-    def addNewTaskOnNewNode(self, job):
+    def addNewTaskOnNewNode(self, job_id):
         id_node = self.getAvailabelNodesForReplicating()
         
         if id_node:
-            
+            job = self.running_job[job_id]
             task = job.tasks_list[-job.nb_task_not_lunched]
             r = self.replicate(id_node,job.id, id_dataset=task.id_dataset, ds_size=job.size_dataset)
             if r:
                 job.ids_nodes.append(id_node)
-                rep, latency = self.sendTaskToNode(task.hode_node,job.id,task.execution_times,task.id_dataset)
+                rep, latency = self.sendTaskToNode(task.host_node,job.id,task.execution_time,task.id_dataset)
                 if rep["started"]:
                     job.nb_task_not_lunched -=1
                     job.executing_tasks.append(task.task_id)
                     task.starting_time = rep['starting_time']
                     task.executed = True
-                    task.host_node = task.host_node
+                    task.host_node = id_node
                     job.starting_times.append(rep['starting_time'])
-                    print(f"========= other task on job {job.id} started")
+                    print(f"========= other task on job {job.id} started on {job.tasks_list[-job.nb_task_not_lunched].starting_time}")
                     return True
+                
         return False
         
     def generateJob(self,):
         self.id_dataset +=1
         nb_tasks = 6 #random.randint(1, MAX_NB_TASKS)
-        file_size = 1024 #random.randint(1, MAX_DATA_SIZE)
+        file_size = 1024*6 #random.randint(1, MAX_DATA_SIZE)
         execution_time = 5 #random.randint(1, MAX_EXECUTION_TIME)
 
         execution_times = []
@@ -293,7 +295,8 @@ class JobInjector:
     def getAvailabelNodesForReplicating(self):
         nodes = [id for id in range(self.nb_nodes)]
         candidates = copy.deepcopy(nodes)
-        for i, job in enumerate(self.running_job):
+        for i, job_id in enumerate(self.running_job.keys()):
+            job = self.running_job[job_id]
             for node in nodes:
                 if node in job.ids_nodes:
                     candidates.remove(node)
@@ -309,7 +312,7 @@ class JobInjector:
         if added:
             self.nb_data_trasnfert +=1
             cost = self.transfertCost(self.graphe_infos[self.id][host], ds_size)
-            self.writeTransfert(f"{job_id},{id_dataset},{self.id},{host},{ds_size},{cost},transfert1\n")
+            #self.writeTransfert(f"{job_id},{id_dataset},{self.id},{host},{ds_size},{cost},transfert1\n")
         return added
             
     
@@ -374,17 +377,8 @@ class JobInjector:
         
 if __name__ == "__main__":
 
-    data =  {'IP_ADDRESS': '172.16.52.9', 'graphe_infos': [[ -1.,  -1.,  -1.,  -1.,  -1.,  -1.,  -1.,  -1., 100.],
-       [  0.,  -1.,  -1.,  -1.,  -1.,  -1.,  -1.,  -1., 100.],
-       [  0.,   0.,  -1.,  -1.,  -1.,  -1.,  -1.,  -1.,  60.],
-       [  0.,   0.,   0.,  -1.,  -1.,  -1.,  -1.,  -1.,  30.],
-       [  0.,   0.,   0.,   0.,  -1.,  -1.,  -1.,  -1., 100.],
-       [  0.,   0.,   0.,   0.,   0.,  -1.,  -1.,  -1.,  20.],
-       [  0.,   0.,   0.,   0.,   0.,   0.,  -1.,  -1.,  20.],
-       [  0.,   0.,   0.,   0.,   0.,   0.,   0.,  -1.,  20.],
-       [100., 100.,  60.,  30., 100.,  20.,  20.,  20.,  -1.]], 'IPs_ADDRESS': ['172.16.52.10', '172.16.52.22', '172.16.52.23', '172.16.52.4', '172.16.52.5', '172.16.52.6', '172.16.52.7', '172.16.52.8'], 'infos': {0: {'latency': 100.0, 'id': 0, 'node_ip': '172.16.52.10', 'node_port': 8880}, 1: {'latency': 100.0, 'id': 1, 'node_ip': '172.16.52.22', 'node_port': 8881}, 2: {'latency': 60.0, 'id': 2, 'node_ip': '172.16.52.23', 'node_port': 8882}, 3: {'latency': 30.0, 'id': 3, 'node_ip': '172.16.52.4', 'node_port': 8883}, 4: {'latency': 100.0, 'id': 4, 'node_ip': '172.16.52.5', 'node_port': 8884}, 5: {'latency': 20.0, 'id': 5, 'node_ip': '172.16.52.6', 'node_port': 8885}, 6: {'latency': 20.0, 'id': 6, 'node_ip': '172.16.52.7', 'node_port': 8886}, 7: {'latency': 20.0, 'id': 7, 'node_ip': '172.16.52.8', 'node_port': 8887}}}#recieveObject()
+    data =0  #recieveObject()
 
-    
     job_injector = JobInjector(
         nb_nodes = NB_NODES,
         graphe= data["graphe_infos"],
