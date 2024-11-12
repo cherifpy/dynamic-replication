@@ -43,9 +43,9 @@ class JobInjector:
         self.port = SERVER_REPLICA_MANAGER_PORT
         self.ip = ip
         self.nb_data_trasnfert = 0
-        self.output = open(f"/tmp/log  .txt",'a')
-        str = "/tmp/transfert.txt"
-        self.transfert = open(str,'w')
+        self.output = open(f"/tmp/log.txt",'a')
+        str = "/tmp/temps_execution.txt"
+        self.file = open(str,'w')
         self.local_execution = local_execution
         self.num_evection = 0
         self.last_node_recieved = None
@@ -62,6 +62,7 @@ class JobInjector:
         self.nb_jobs = 0
         self.id_dataset = 0
         self.running_job = {}
+        self.historiques = {}
 
 
     def start(self,):
@@ -103,9 +104,9 @@ class JobInjector:
                     if rep['started']:
                         print(f"========= Task of job {job_id} started")
                         job.nb_task_not_lunched -=1
-                        job.task_list[i].starting_time = rep['starting_time']
-                        job.task_list[i].host_id = host_nodes
-                        job.task_list[i].executed = True
+                        job.tasks_list[i].starting_time = rep['starting_time']
+                        job.tasks_list[i].host_id = host_nodes
+                        job.tasks_list[i].executed = True
                         job.executing_tasks.append((i,job.tasks_list[i].task_id))
                         #self.executing_tasks.append(i)
                         self.executing_task.append((job_id, host, rep['starting_time'],job.execution_times))
@@ -163,7 +164,7 @@ class JobInjector:
                 task = job.tasks_list[i]
                 if not task.is_finished and task.starting_time + task.execution_time < time.time(): 
                     print(f"========= task on job {job_id} finished")
-                    task.is_finiched = True
+                    task.is_finished = True
                     if job.nb_task_not_lunched > 0: #arrived here
                         end = False
                         for n_task in job.tasks_list:
@@ -188,7 +189,9 @@ class JobInjector:
             if end: delete.append(job_id)
         for id in delete :
             print(f"========= job {job_id} finished")
-            self.hostoriques[id] = copy.deepcopy(self.running_job[id])
+            job = self.running_job[id]
+            self.writeStates(f"{job.id},{job.nb_task},{job.job_starting_time},{job.finishing_time}")
+            self.historiques[id] = copy.deepcopy(self.running_job[id])
             del self.running_job[id]
         return True
         
@@ -304,8 +307,8 @@ class JobInjector:
 
         return latency_in_s + (size_in_bits/bandwith_in_bits)
     
-    def writeTransfert(self,str):
-        path = "/tmp/transfert.txt"
+    def writeStates(self,str):
+        path = self.file
         self.transfert = open(path,'a')
         self.transfert.write(str)
         self.transfert.close()
