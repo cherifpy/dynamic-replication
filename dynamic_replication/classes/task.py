@@ -10,3 +10,4 @@ class Task:
         self.starting_time = None
         self.is_finished = False
         self.executed = False
+        

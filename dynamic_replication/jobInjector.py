@@ -153,7 +153,6 @@ class JobInjector:
             del self.running_job[id]
 
         return True
-        
 
     def updateRunningJobsListV2(self,):
         delete = []
@@ -162,9 +161,9 @@ class JobInjector:
             job = self.running_job[job_id]
             for i, task_id in job.executing_tasks:
                 task = job.tasks_list[i]
-                if task.starting_time + task.execution_time < time.time(): 
+                if not task.is_finished and task.starting_time + task.execution_time < time.time(): 
                     print(f"========= task on job {job_id} finished")
-                    job.is_finiched = True
+                    task.is_finiched = True
                     if job.nb_task_not_lunched > 0: #arrived here
                         end = False
                         for n_task in job.tasks_list:
@@ -182,13 +181,14 @@ class JobInjector:
                             job.starting_times[i] = rep['starting_time']
                             print(f"========= other task on job {job_id} started")
                     else:
-                        print(f"========= job {job_id} finished")
                         job.finishing_time = time.time()
                         end = True
                 else:
                     end = False
             if end: delete.append(job_id)
         for id in delete :
+            print(f"========= job {job_id} finished")
+            self.hostoriques[id] = copy.deepcopy(self.running_job[id])
             del self.running_job[id]
         return True
         

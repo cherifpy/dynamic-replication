@@ -21,6 +21,7 @@ class Job:
         self.tasks_list = []
         self.finishing_time = 0
         self.executing_tasks = []
+        self.finished_tasks = []
 
     @classmethod
     def createJob():
