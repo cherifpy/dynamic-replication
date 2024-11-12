@@ -137,7 +137,7 @@ class JobInjector:
         for job_id in self.running_job.keys():
             end = False
             job = self.running_job[job_id]
-            for i, task_id in enumerate(job.executing_tasks):
+            for i, task_id in job.executing_tasks:
                 task = job.tasks_list[i]
                 if not task.is_finished and task.starting_time + task.execution_time < time.time(): 
                     print(f"========= task on job {job_id} finished")
@@ -151,8 +151,9 @@ class JobInjector:
                         
                         rep, latency = self.sendTaskToNode(task.hode_node,job_id,new_task.execution_times,task.id_dataset)
                         if rep["started"]:
+                            
+                            job.executing_tasks.append((len(job.executing_tasks)+1,new_task.task_id))
                             job.nb_task_not_lunched -=1
-                            job.executing_tasks.append(new_task.task_id)
                             new_task.starting_time = rep['starting_time']
                             new_task.executed = True
                             new_task.host_node = task.host_node
@@ -178,7 +179,7 @@ class JobInjector:
         for job_id in self.running_job.keys():
             end = False
             job = self.running_job[job_id]
-            for i, task_id in enumerate(job.executing_tasks):
+            for i, task_id in job.executing_tasks:
                 task = job.tasks_list[i]
                 if not task.is_finished and task.starting_time + task.execution_time < time.time():
                     print(f"========= task on job {job_id} finished")
@@ -193,8 +194,9 @@ class JobInjector:
                         
                         rep, latency = self.sendTaskToNode(task.hode_node,job_id,new_task.execution_times,task.id_dataset)
                         if rep["started"]:
+                            
+                            job.executing_tasks.append((len(job.executing_tasks)+1,new_task.task_id))
                             job.nb_task_not_lunched -=1
-                            job.executing_tasks.append(new_task.task_id)
                             new_task.starting_time = rep['starting_time']
                             new_task.executed = True
                             new_task.host_node = task.host_node
@@ -229,8 +231,9 @@ class JobInjector:
                 job.ids_nodes.append(id_node)
                 rep, latency = self.sendTaskToNode(task.host_node,job.id,task.execution_time,task.id_dataset)
                 if rep["started"]:
+                    
+                    job.executing_tasks.append((len(job.executing_tasks)+1, task.task_id))
                     job.nb_task_not_lunched -=1
-                    job.executing_tasks.append(task.task_id)
                     task.starting_time = rep['starting_time']
                     task.executed = True
                     task.host_node = id_node
