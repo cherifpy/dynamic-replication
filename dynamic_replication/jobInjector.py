@@ -7,11 +7,8 @@ from experiments.params import  (
     BD_LISTENING_PORT,
     MAX_EXECUTION_TIME,
     NB_REPLICAS_INIT,
-    MAX_DATA_SIZE,
-    MAX_NB_TASKS,
     BANDWIDTH,
     NB_NODES,
-    NB_JOBS,
 )
 
 from communication.send_data import recieveObject
@@ -105,35 +102,34 @@ class JobInjector:
                     rep, latency = self.sendTaskToNode(host, job_id, job.execution_times,job.id_dataset)
                     if rep['started']:
                         print(f"========= Task of job {job_id} started")
-                        job.nb_task_not_lunched -=1
                         job.tasks_list[i].starting_time = rep['starting_time']
                         job.tasks_list[i].host_id = host_nodes
                         job.tasks_list[i].executed = True
                         job.tasks_list[i].state = "Started"
-                        job.executing_tasks.append((i,job.tasks_list[i].task_id))
-                        #self.executing_tasks.append(i)
                         self.executing_task.append((job_id, host, rep['starting_time'],job.execution_times))
                         job.ids_nodes.append(host)
                         job_started = True
-
-                    job.starting_times.append(rep['starting_time'])
-                    job.nb_task_not_lunched -=1
-                
+                        job.starting_times.append(rep['starting_time'])
+                        job.nb_task_not_lunched -=1
+                    
                 if job_started:
                     print("========= Job started")
                     #self.waiting_list.append(job)
                     job.job_starting_time = time.time()
                     self.running_job[job_id] = job
-                    
-
                     j+=1
-            self.updateRunningJobsWithDynamicReplication()
+                    
+            self.analyseOnCaseOne()
             if len(self.running_job.keys()) ==0:
                 print("========= All jobs executed")
                 break
 
 
     def updateRunningJobsList(self,):
+        """
+            Cas 1: we have heterogenose task and dataset with 1 and only replica
+
+        """
         delete = []
         for job_id in self.running_job.keys():
             end = False
@@ -150,11 +146,9 @@ class JobInjector:
                             if n_task.task_id in job.executing_task:
                                 new_task = n_task
                                 break
-                        
                         rep, latency = self.sendTaskToNode(task.hode_node,job_id,new_task.execution_times,task.id_dataset)
                         if rep["started"]:
-                            
-                            job.executing_tasks.append((len(job.executing_tasks)+1,new_task.task_id))
+                            job.executing_tasks.append((len(job.executing_tasks),new_task.task_id))
                             job.nb_task_not_lunched -=1
                             new_task.starting_time = rep['starting_time']
                             new_task.executed = True
@@ -183,12 +177,11 @@ class JobInjector:
             job = self.running_job[job_id]
             for i, task_id in job.executing_tasks:
                 task = job.tasks_list[i]
-                if not task.is_finished and task.starting_time + task.execution_time < time.time():
+                if not task.is_finished and task.starting_time + task.execution_time < time.time(): #Faut voir avec ca
                     print(f"========= task on job {job_id} finished")
-                    new_task.state = "Finished"
+                    task.state = "Finished"
                     task.is_finished = True
                     if job.nb_task_not_lunched > 0: #arrived here
-
                         end = False
                         for n_task in job.tasks_list:
                             if n_task.task_id not in job.executing_task:
@@ -198,8 +191,7 @@ class JobInjector:
                         rep, latency = self.sendTaskToNode(task.hode_node,job_id,new_task.execution_times,task.id_dataset)
                         if rep["started"]:
                             new_task.state = "Started"
-                            job.executing_tasks.append((len(job.executing_tasks)+1,new_task.task_id))
-                            
+                            job.executing_tasks.append((len(job.executing_tasks),new_task.task_id))
                             job.nb_task_not_lunched -=1
                             new_task.starting_time = rep['starting_time']
                             new_task.executed = True
@@ -224,20 +216,74 @@ class JobInjector:
             del self.running_job[id]
         return True
     
+    def analyseOnCaseOne(self):
+        """
+            Cas 1: we have heterogenose task and dataset with 1 and only replica
+
+        """
+        delete = []
+        for job_id in self.running_job.keys():
+            end = False
+            job = self.running_job[job_id]
+            
+            for i, task_id in job.executing_tasks:
+                
+                task = job.tasks_list[i]
+                if not task.state != "Finished" and task.starting_time + task.execution_time < time.time(): 
+                    print(f"========= task on job {job_id} finished")
+                    task.is_finished = True
+                    task.state = "Finished"
+                    if job.nb_task_not_lunched > 0: #arrived here
+                        end = False
+                        for n_task in job.tasks_list:
+                            if n_task.task_id in job.executing_task:
+                                new_task = n_task
+                                break
+                        rep, latency = self.sendTaskToNode(task.host_node,job_id,new_task.executiossn_times,task.id_dataset)
+                        if rep["started"]:
+                            job.executing_tasks.append((len(job.executing_tasks),new_task.task_id))
+                            job.nb_task_not_lunched -=1
+                            new_task.starting_time = rep['starting_time']
+                            new_task.executed = True
+                            new_task.state = "Started"
+                            new_task.host_node = task.host_node
+                            print(f"========= new task on job {job_id} started at node {task.host_node}")
+                    else:
+                        job.finishing_time = time.time()
+                        end = True
+                else:
+                    end = False
+
+            if end: 
+                delete.append(job_id)
+
+        for id in delete :
+            print(f"========= job {job_id} finished")
+            job = self.running_job[id]
+            self.writeStates(f"{job.id},{job.nb_task},{job.job_starting_time},{job.finishing_time}")
+            self.historiques[id] = copy.deepcopy(self.running_job[id])
+            del self.running_job[id]
+        return True
+
     def addNewTaskOnNewNode(self, job_id):
+        job = self.running_job[job_id]
+        if job.nb_task_not_lunched == 0:
+            return False
+        
         id_node = self.getAvailabelNodesForReplicating()
         
         if id_node:
-            job = self.running_job[job_id]
+            
+            print(-job.nb_task_not_lunched)
             task = job.tasks_list[-job.nb_task_not_lunched]
             r = self.replicate(id_node,job.id, id_dataset=task.id_dataset, ds_size=job.size_dataset)
             if r:
                 job.ids_nodes.append(id_node)
-                rep, latency = self.sendTaskToNode(task.host_node,job.id,task.execution_time,task.id_dataset)
+                rep, latency = self.sendTaskToNode(id_node,job.id,task.execution_time,task.id_dataset)
                 if rep["started"]:
-                    new_task.state = "Started"
-                    job.executing_tasks.append((len(job.executing_tasks)+1, task.task_id))
-                    print(job.executing_tasks)
+                    task.state = "Started"
+                    job.executing_tasks.append((len(job.executing_tasks), task.task_id))
+                    print(task.executing_tasks)
                     job.nb_task_not_lunched -=1
                     task.starting_time = rep['starting_time']
                     task.executed = True

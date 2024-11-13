@@ -37,6 +37,7 @@ class NodeClient(object):
             neighbors=neighbors,
             node_client = self
         )
+        self.waiting_list = []
 
     def start(self):
         self.server_is_running = self.node_server.run()
