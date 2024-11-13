@@ -490,7 +490,11 @@ class JobInjector:
         
 if __name__ == "__main__":
 
-    data =0  #recieveObject()
+    data ={'IP_ADDRESS': '172.16.96.72', 'graphe_infos': [[-1., 20., 20., 20., 20.],
+       [20., -1., 20., 20., 20.],
+       [20., 20., -1., 20., 20.],
+       [20., 20., 20., -1., 20.],
+       [20., 20., 20., 20., -1.]], 'IPs_ADDRESS': ['172.16.96.16', '172.16.96.18', '172.16.96.28', '172.16.96.32'], 'infos': {0: {'latency': 20.0, 'id': 0, 'node_ip': '172.16.96.16', 'node_port': 8880}, 1: {'latency': 20.0, 'id': 1, 'node_ip': '172.16.96.18', 'node_port': 8881}, 2: {'latency': 20.0, 'id': 2, 'node_ip': '172.16.96.28', 'node_port': 8882}, 3: {'latency': 20.0, 'id': 3, 'node_ip': '172.16.96.32', 'node_port': 8883}}} #recieveObject()
 
     job_injector = JobInjector(
         nb_nodes = NB_NODES,
