@@ -68,15 +68,13 @@ class JobInjector:
         if not self.nodes_infos:
             return False
         
-        job_id, job = self.generateJob() # (nb_tasks, execution_time, file_size)
+        job_id, job = self.generateJob()
         self.waiting_list.append((job_id,job))
 
-        job_id, job = self.generateJob() # (nb_tasks, execution_time, file_size)
+        job_id, job = self.generateJob()
         self.waiting_list.append((job_id,job))
         j = 0
         while True:
-            
-            
             while j < len(self.waiting_list):
                 job_started = False
                 
@@ -96,13 +94,7 @@ class JobInjector:
                     else: print("no replica sended")
 
                 for i,host in enumerate(host_with_replica):
-                    """
-                        id_node: Any,
-                        job_id: Any,
-                        execution_time: Any,
-                        id_dataset: Any
-                    """
-                    
+
                     rep, latency = self.sendTaskToNode(host, job_id, job.execution_times,job.id_dataset)
                     if rep['started']:
                         
@@ -113,7 +105,6 @@ class JobInjector:
                         job.tasks_list[i].executed = True
                         job.tasks_list[i].state = "Started"
                         job.executing_tasks.append((i, job.tasks_list[i].task_id))
-                        self.executing_task.append((job_id, host, rep['starting_time'],job.execution_times))
                         job.ids_nodes.append(host)
                         job_started = True
                         job.starting_times.append(rep['starting_time'])
@@ -390,21 +381,23 @@ class JobInjector:
         pass
 
     def selectHostsNodes(self):
-        availabel_nodes = self.getAvailabledNodes()
+        availabel_nodes = self.getAvailabelNodesForReplicating()
         if len(availabel_nodes) < NB_REPLICAS_INIT:
             return copy.deepcopy(availabel_nodes)
         else:
             return copy.deepcopy(random.sample(availabel_nodes, NB_REPLICAS_INIT))
 
 
-    def getAvailabledNodes(self):
+    def getAvailabledNodes(self): 
         nodes = [id for id in range(self.nb_nodes)]
-        for i, task in enumerate(self.executing_task):
-            time_second = time.time()
-            if int(time_second - task[2]) < task[3] and task[1] in nodes:
-                nodes.remove(task[1])
-        return nodes
-
+        candidates = copy.deepcopy(nodes)
+        for i, job_id in enumerate(self.running_job.keys()):
+            job = self.running_job[job_id]
+            for node in nodes:
+                if node in job.ids_nodes:
+                    candidates.remove(node)
+                
+        return [] if len(candidates) == 0 else candidates
     def getAvailabelNodesForReplicating(self):
         nodes = [id for id in range(self.nb_nodes)]
         candidates = copy.deepcopy(nodes)
