@@ -112,7 +112,7 @@ class JobInjector:
                         job.tasks_list[i].host_id = host_nodes
                         job.tasks_list[i].executed = True
                         job.tasks_list[i].state = "Started"
-                        job.executing_task.append((i, job.tasks_list[i].task_id))
+                        job.executing_tasks.append((i, job.tasks_list[i].task_id))
                         self.executing_task.append((job_id, host, rep['starting_time'],job.execution_times))
                         job.ids_nodes.append(host)
                         job_started = True
