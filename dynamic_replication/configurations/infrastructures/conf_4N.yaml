@@ -23,7 +23,7 @@ machines:
     storage: 40
   - cluster: paravance
     nodes: 1
-    roles: [F]
+    roles: [E]
     storage: 40
 network_constraints:
   - default_delay: 20ms
