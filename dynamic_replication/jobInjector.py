@@ -366,7 +366,7 @@ class JobInjector:
         self.last_node_recieved = ip_node
         try:
             r = client.set(f"{self.dataset_counter}", content)
-            print(f'ajouter {r}\n')
+            print(f'replica ajoutée sur le noued {id_node} {r}\n')
             return True
         except:
             return False
@@ -386,7 +386,7 @@ class JobInjector:
         url = f'http://{ip}:{port}/execut'
         
         response = requests.post(url, json=data)
-        print(f"reponse recu {response.json()}")
+        print(f"reponse recu {response.json()} du noeud {id_node}")
         if response.json()["started"]:#(job, node, start_time, execution_time)
             self.executing_task.append((job_id, int(id_node), response.json()['starting_time']))
 
