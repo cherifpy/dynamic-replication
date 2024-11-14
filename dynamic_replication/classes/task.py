@@ -8,6 +8,8 @@ class Task:
         self.id_dataset = id_dataset   
         self.host_node = -1
         self.starting_time = None
+        self.finishing_time = 0
+        self.size_dataset = 0
         self.is_finished = False
         self.executed = False
         self.state = "NotStarted" #🤣 Started Finished .....
