@@ -43,7 +43,7 @@ class JobInjector:
         self.ip = ip
         self.nb_data_trasnfert = 0
         
-        self.output = open(f"/tmp/log.txt",'a')
+        self.output = open(f"/tmp/log.txt",'w')
         
         str = "/tmp/temps_execution.txt"
         self.stats = open(str,'w')#self.writeStates(f"{job.id},{job.nb_task},{job.job_starting_time},{job.finishing_time}")
@@ -76,9 +76,9 @@ class JobInjector:
     def start(self,):
         if not self.nodes_infos:
             return False
-        
-        #job_id, job = self.generateJob()
-        #self.waiting_list.append((job_id,job))
+        self.exp_start_time = time.time()
+        job_id, job = self.generateJob()
+        self.waiting_list.append((job_id,job))
 
         job_id, job = self.generateJob()
         self.waiting_list.append((job_id,job))
@@ -260,6 +260,7 @@ class JobInjector:
             task = job.tasks_list[-job.nb_task_not_lunched]
             r = self.replicate(id_node,job.id, id_dataset=task.id_dataset, ds_size=job.size_dataset)
             if r:
+                self.writeOutput(f"Replica of dataset {job.id_dataset} sended to {id_node}")
                 job.ids_nodes.append(id_node)
                 rep, latency = self.sendTaskToNode(id_node,job.id,task.execution_time,task.id_dataset)
                 if rep["started"]:
@@ -412,8 +413,11 @@ class JobInjector:
     
     def writeOutput(self, str):
         self.output = open(f"/tmp/log.txt",'a')
-        self.output.write(str)
+        self.output.write(f"time: {self.getTime()}: {str}\n")
         self.output.close() 
+
+    def getTime(self):
+        return int(time.time() - self.exp_start_time) 
         
 if __name__ == "__main__":
 
@@ -430,7 +434,7 @@ if __name__ == "__main__":
         ip=data["IP_ADDRESS"],
         local_execution=False
     )
-    job_injector.writeOutput(f"{data}")
+    #job_injector.writeOutput(f"{data}")
     
     
     job_injector.nodes_infos = data["infos"]
