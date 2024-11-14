@@ -417,7 +417,7 @@ class JobInjector:
         self.output.close() 
 
     def getTime(self):
-        return int(time.time() - self.exp_start_time) 
+        return time.time() - self.exp_start_time
         
 if __name__ == "__main__":
 
