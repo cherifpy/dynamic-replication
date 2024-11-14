@@ -5,23 +5,23 @@ exp_env: debian11-min
 exp_walltime: 02:00:00
 execution_local: False
 machines:
-  - cluster: parasilo
+  - cluster: ecotype
     nodes: 1
     roles: [A]
     storage: 40
-  - cluster: parasilo
+  - cluster: ecotype
     nodes: 1
     roles: [B]
     storage: 40
-  - cluster: parasilo
+  - cluster: ecotype
     nodes: 1
     roles: [C]
     storage: 40
-  - cluster: parasilo
+  - cluster: ecotype
     nodes: 1
     roles: [D]
     storage: 40
-  - cluster: parasilo
+  - cluster: ecotype
     nodes: 1
     roles: [E]
     storage: 40
