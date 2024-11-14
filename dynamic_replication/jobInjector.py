@@ -48,7 +48,7 @@ class JobInjector:
         str = "/tmp/temps_execution.txt"
         self.stats = open(str,'w')#self.writeStates(f"{job.id},{job.nb_task},{job.job_starting_time},{job.finishing_time}")
         self.stats.write('job_id,nb_tasks, starting_time,finishing_time')
-        self.stats_on_task.close()
+        self.stats.close()
 
         self.stats_on_task = open("/tmp/stats_on_tasks.txt",'w')
         self.stats_on_task.write('job,task,node,starting_time,finishing_time,id_dataset,transfert_time')
@@ -98,6 +98,7 @@ class JobInjector:
                     r = self.replicate(host, job_id, job.id_dataset, job.size_dataset)
                     if r: 
                         print(f"{i+1} Replica sended")
+                        self.writeOutput(f"Replica of dataset {job.id_dataset} sended to {host}")
                         host_with_replica.append(host)
                         job.tasks_list[i].host_node = host
                     
@@ -105,10 +106,11 @@ class JobInjector:
                         print("no replica sended")
 
                 for i,host in enumerate(host_with_replica):
-
+                    
                     rep, latency = self.sendTaskToNode(host, job_id, job.execution_times,job.id_dataset)
                     if rep['started']:
-                        
+                        self.writeOutput(f"Job {job_id} started")
+                        self.writeOutput(f"Task {i} of job {job_id} started on node {host}")
                         print("========= Job started")
                         print(f"========= Task of job {job_id} started on node {host}")
                         job.tasks_list[i].starting_time = rep['starting_time']
@@ -145,6 +147,7 @@ class JobInjector:
 
                 task = job.tasks_list[i]
                 if  task.state == "Started" and task.starting_time + task.execution_time < time.time():
+                    self.writeOutput(f"Task {task.task_id} on job {job_id} finished")
                     print(f"========= task on job {job_id} finished")
                     task.is_finished = True
                     task.state = "Finished"
@@ -165,6 +168,7 @@ class JobInjector:
                             new_task.state = "Started"
                             new_task.host_node = task.host_node
                             print(f"========= new task on job {job_id} started at node {task.host_node}")
+                            self.writeOutput(f"Task {new_task.task_id} of job {job_id} started on node {task.host_node}")
                             print(job.executing_tasks)
                         else:
                             print("didn't start")
@@ -179,6 +183,7 @@ class JobInjector:
 
         for id in delete :
             print(f"========= job {job_id} finished")
+            self.writeOutput(f"Job {id} finished")
             job = self.running_job[id]
             self.writeStates(f"{job.id},{job.nb_task},{job.job_starting_time},{job.finishing_time}")
             self.historiques[id] = copy.deepcopy(self.running_job[id])
@@ -196,6 +201,7 @@ class JobInjector:
                 task = job.tasks_list[i]
                 if  task.state == "Started" and task.starting_time + task.execution_time < time.time():
                     print(f"========= task on job {job_id} finished")
+                    self.writeOutput(f"Task {task.task_id} on job {job_id} finished")
                     task.is_finished = True
                     task.state = "Finished"
                     t_time = transfertTime(BANDWIDTH, self.graphe_infos[self.id][task.host_node], job.size_dataset)
@@ -216,6 +222,7 @@ class JobInjector:
                             new_task.state = "Started"
                             new_task.host_node = task.host_node
                             print(f"========= new task on job {job_id} started at node {task.host_node}")
+                            self.writeOutput(f"Task {new_task.task_id} of job {job_id} started on node {task.host_node}")
                             #print(job.executing_tasks)
                         else:
                             print("didn't start")
@@ -264,7 +271,7 @@ class JobInjector:
                     task.host_node = id_node
                     job.starting_times.append(rep['starting_time'])
                     print(f"========= other task on job {job.id} started on node {job.tasks_list[-job.nb_task_not_lunched].host_node} at {job.tasks_list[-job.nb_task_not_lunched].starting_time}")
-                    
+                    self.writeOutput(f"Task {task.task_id} of job {job_id} started on node {task.host_node}")
                     return True
                 
         return False
@@ -414,7 +421,9 @@ if __name__ == "__main__":
        [20., -1., 20., 20., 20.],
        [20., 20., -1., 20., 20.],
        [20., 20., 20., -1., 20.],
-       [20., 20., 20., 20., -1.]], 'IPs_ADDRESS': ['172.16.97.17', '172.16.97.19', '172.16.97.2', '172.16.97.27'], 'infos': {0: {'latency': 20.0, 'id': 0, 'node_ip': '172.16.97.17', 'node_port': 8880}, 1: {'latency': 20.0, 'id': 1, 'node_ip': '172.16.97.19', 'node_port': 8881}, 2: {'latency': 20.0, 'id': 2, 'node_ip': '172.16.97.2', 'node_port': 8882}, 3: {'latency': 20.0, 'id': 3, 'node_ip': '172.16.97.27', 'node_port': 8883}}}
+       [20., 20., 20., 20., -1.]], 'IPs_ADDRESS': ['172.16.97.2', '172.16.97.22', '172.16.97.24', '172.16.97.27'], 'infos': {0: {'latency': 20.0, 'id': 0, 'node_ip': '172.16.97.2', 'node_port': 8880}, 1: {'latency': 20.0, 'id': 1, 'node_ip': '172.16.97.22', 'node_port': 8881}, 2: {'latency': 20.0, 'id': 2, 'node_ip': '172.16.97.24', 'node_port': 8882}, 3: {'latency': 20.0, 'id': 3, 'node_ip': '172.16.97.27', 'node_port': 8883}}}
+    
+    
     job_injector = JobInjector(
         nb_nodes = NB_NODES,
         graphe= data["graphe_infos"],
