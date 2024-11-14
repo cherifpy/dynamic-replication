@@ -107,7 +107,7 @@ class JobInjector:
 
                 for i,host in enumerate(host_with_replica):
                     
-                    rep, latency = self.sendTaskToNode(host, job_id, job.execution_times,job.id_dataset)
+                    rep, latency = self.sendTaskToNode(host, job_id, job.tasks_list[i].execution_time,job.id_dataset)
                     if rep['started']:
                         self.writeOutput(f"Job {job_id} started")
                         self.writeOutput(f"Task {i} of job {job_id} started on node {host}")
@@ -295,7 +295,7 @@ class JobInjector:
             size_dataset=file_size
         )
 
-        job.tasks_list = [Task(f'task_{i}', execution_time, self.id_dataset) for i in range(nb_tasks)]
+        job.tasks_list = [Task(f'task_{i}', random.randint(2,10), self.id_dataset) for i in range(nb_tasks)]
 
         self.jobs_list[self.nb_jobs] = job
         self.nb_jobs +=1
@@ -403,12 +403,12 @@ class JobInjector:
     def writeStates(self,str):
         path = "/tmp/temps_execution.txt"
         self.stats = open(path,'a')
-        self.stats.write(str)
+        self.stats.write(f"{str}\n")
         self.stats.close()
 
     def wrtieStatsOnTasks(self,str):
-        self.stats_on_task = open("/tmp/stats_on_tasks.txt",'w')
-        self.stats_on_task.write(str)
+        self.stats_on_task = open("/tmp/stats_on_tasks.txt",'a')
+        self.stats_on_task.write(f"{str}\n")
         self.stats_on_task.close()
     
     def writeOutput(self, str):
