@@ -82,7 +82,7 @@ class NodeManagerServer:
             b1 = self.node_manager.checkOnCacheMemorie(task["id_dataset"])
             
             if not b1:
-                processed_data = {"sendData":True, "started": False, "PID": None}
+                processed_data = {"sendData":True, "started": False, "PID": None, "id_dataset":task["id_dataset"]}
             
             else:
                 pid = self.node_client.startTask(task['execution_time'])

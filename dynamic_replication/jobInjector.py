@@ -260,11 +260,13 @@ class JobInjector:
             print(-job.nb_task_not_lunched)
             task = job.tasks_list[-job.nb_task_not_lunched]
             r = self.replicate(id_node,job.id, id_dataset=job.id_dataset, ds_size=job.size_dataset)
+
             if r:
                 self.writeOutput(f"Replica of dataset {job.id_dataset} sended to {id_node}")
-                job.ids_nodes.append(id_node)
                 rep, latency = self.sendTaskToNode(id_node,job.id,task.execution_time,job.id_dataset)
+
                 if rep["started"]:
+                    job.ids_nodes.append(id_node)
                     task.state = "Started"
                     job.executing_tasks.append((len(job.executing_tasks), task.task_id))
                     #print(job.executing_tasks)
