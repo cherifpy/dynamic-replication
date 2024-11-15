@@ -69,7 +69,7 @@ class JobInjector:
         self.jobs_list = {} 
         self.dataset_counter = 0
         self.nb_jobs = 0
-        self.id_dataset = 0
+        self.id_dataset = 10
         self.running_job = {}
         self.historiques = {}
 
@@ -292,11 +292,11 @@ class JobInjector:
         job = Job(
             nb_task=nb_tasks,
             execution_times=execution_time,
-            id_dataset="ds_"+self.id_dataset,
+            id_dataset=self.id_dataset,
             size_dataset=file_size
         )
 
-        job.tasks_list = [Task(f'task_{i}', random.randint(2,10), "ds_"+self.id_dataset) for i in range(nb_tasks)]
+        job.tasks_list = [Task(f'task_{i}', random.randint(2,10), self.id_dataset) for i in range(nb_tasks)]
 
         self.jobs_list[self.nb_jobs] = job
         self.nb_jobs +=1
