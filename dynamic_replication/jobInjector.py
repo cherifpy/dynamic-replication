@@ -30,6 +30,7 @@ import requests
 import os
 import threading
 import random
+random.seed(1)
 
 class JobInjector:
     def __init__(self,nb_nodes ,graphe, ip, local_execution) -> None:
@@ -51,7 +52,7 @@ class JobInjector:
         self.stats.close()
 
         self.stats_on_task = open("/tmp/stats_on_tasks.txt",'w')
-        self.stats_on_task.write('job,task,node,starting_time,finishing_time,id_dataset,transfert_time')
+        self.stats_on_task.write('job,task,node,starting_time,finishing_time,execution_time,id_dataset,transfert_time')
         self.stats_on_task.close()
         
         self.local_execution = local_execution
@@ -151,7 +152,7 @@ class JobInjector:
                     print(f"========= task on job {job_id} finished")
                     task.is_finished = True
                     task.state = "Finished"
-                    self.wrtieStatsOnTasks(f"{job_id},{task.task_id},{task.host_node},{task.starting_time},{task.execution_time + task.starting_time},{task.id_dataset}")
+                    self.wrtieStatsOnTasks(f"{job_id},{task.task_id},{task.host_node},{task.starting_time},{task.execution_time + task.starting_time},{task.execution_time},{task.id_dataset}")
                     if job.nb_task_not_lunched > 0: #arrived here
                         end = False
                         for n_task in job.tasks_list:
@@ -205,7 +206,7 @@ class JobInjector:
                     task.is_finished = True
                     task.state = "Finished"
                     t_time = transfertTime(BANDWIDTH, self.graphe_infos[self.id][task.host_node], job.size_dataset)
-                    self.wrtieStatsOnTasks(f"{job_id},{task.task_id},{task.host_node},{task.starting_time},{task.execution_time + task.starting_time},{task.id_dataset},{t_time}")
+                    self.wrtieStatsOnTasks(f"{job_id},{task.task_id},{task.host_node},{task.starting_time},{task.execution_time + task.starting_time},{task.execution_time},{task.id_dataset},{t_time}")
                     if job.nb_task_not_lunched > 0: #arrived here
                         end = False
                         for n_task in job.tasks_list:
