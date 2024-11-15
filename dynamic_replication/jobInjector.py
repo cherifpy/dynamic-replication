@@ -30,7 +30,7 @@ import requests
 import os
 import threading
 import random
-#random.seed(1)
+random.seed(1)
 
 class JobInjector:
     def __init__(self,nb_nodes ,graphe, ip, local_execution) -> None:
@@ -48,11 +48,11 @@ class JobInjector:
         
         str = "/tmp/temps_execution.txt"
         self.stats = open(str,'w')#self.writeStates(f"{job.id},{job.nb_task},{job.job_starting_time},{job.finishing_time}")
-        self.stats.write('job_id,nb_tasks, starting_time,finishing_time')
+        self.stats.write('job_id,nb_tasks, starting_time,finishing_time\n')
         self.stats.close()
 
         self.stats_on_task = open("/tmp/stats_on_tasks.txt",'w')
-        self.stats_on_task.write('job,task,node,starting_time,finishing_time,execution_time,id_dataset,transfert_time')
+        self.stats_on_task.write('job,task,node,starting_time,finishing_time,execution_time,id_dataset,transfert_time\n')
         self.stats_on_task.close()
         
         self.local_execution = local_execution
@@ -156,7 +156,7 @@ class JobInjector:
                     if job.nb_task_not_lunched > 0: #arrived here
                         end = False
                         for n_task in job.tasks_list:
-                            if n_task.state != "Finished":
+                            if n_task.state != "NotStarted":
                                 new_task = n_task
                                 break
                         rep, latency = self.sendTaskToNode(task.host_node,job_id,new_task.execution_time,job.id_dataset)
@@ -195,12 +195,13 @@ class JobInjector:
         delete = []
         for job_id in self.running_job.keys():
             added = False
-            end = False
+            end = True #False
             job = self.running_job[job_id]
             for i, task_id in job.executing_tasks:
                 
                 task = job.tasks_list[i]
                 if  task.state == "Started" and task.starting_time + task.execution_time < time.time():
+                    end = False
                     print(f"========= task on job {job_id} finished")
                     self.writeOutput(f"Task {task.task_id} on job {job_id} finished")
                     task.is_finished = True
@@ -208,11 +209,12 @@ class JobInjector:
                     t_time = transfertTime(BANDWIDTH, self.graphe_infos[self.id][task.host_node], job.size_dataset)
                     self.wrtieStatsOnTasks(f"{job_id},{task.task_id},{task.host_node},{task.starting_time},{task.execution_time + task.starting_time},{task.execution_time},{task.id_dataset},{t_time}")
                     if job.nb_task_not_lunched > 0: #arrived here
-                        end = False
+                        
                         for n_task in job.tasks_list:
                             if n_task.state == "NotStarted":
                                 new_task = n_task
                                 break
+
                         rep, latency = self.sendTaskToNode(task.host_node,job_id,new_task.execution_time,job.id_dataset)
 
                         if rep["started"]:
@@ -224,26 +226,29 @@ class JobInjector:
                             new_task.host_node = task.host_node
                             print(f"========= new task on job {job_id} started at node {task.host_node}")
                             self.writeOutput(f"Task {new_task.task_id} of job {job_id} started on node {task.host_node}")
-                            #print(job.executing_tasks)
+                            print(job.executing_tasks)
                         else:
                             print("didn't start")
-                    else:
-                        job.finishing_time = time.time()
-                        end = True
-                if task.state == "Started" and time.time() - task.starting_time > 3:
+                    #else:
+                        #job.finishing_time = time.time()
+                        
+                        #end = True
+                            
+                if task.state == "Started" and time.time() - task.starting_time > 3 and not added:
                     end = False
                     t_time = transfertTime(BANDWIDTH, self.graphe_infos[self.id][task.host_node], job.size_dataset)
                     added = self.addNewTaskOnNewNode(job_id)
 
                     if added: 
                         job.nb_task_not_lunched -=1
-                        break
+                        
 
             if end: delete.append(job_id)
 
         for id in delete :
             print(f"========= job {id} finished")
             job = self.running_job[id]
+            job.finishing_time = time.time()
             self.writeStates(f"{job.id},{job.nb_task},{job.job_starting_time},{job.finishing_time}")
             self.historiques[id] = copy.deepcopy(self.running_job[id])
             del self.running_job[id]
@@ -269,7 +274,7 @@ class JobInjector:
                     job.ids_nodes.append(id_node)
                     task.state = "Started"
                     job.executing_tasks.append((len(job.executing_tasks), task.task_id))
-                    #print(job.executing_tasks)
+                    print(job.executing_tasks)
                     task.starting_time = rep['starting_time']
                     task.executed = True
                     task.host_node = id_node
@@ -430,7 +435,7 @@ if __name__ == "__main__":
        [20., -1., 20., 20., 20.],
        [20., 20., -1., 20., 20.],
        [20., 20., 20., -1., 20.],
-       [20., 20., 20., 20., -1.]], 'IPs_ADDRESS': ['172.16.193.20', '172.16.193.36', '172.16.193.37', '172.16.193.45'], 'infos': {0: {'latency': 20.0, 'id': 0, 'node_ip': '172.16.193.20', 'node_port': 8880}, 1: {'latency': 20.0, 'id': 1, 'node_ip': '172.16.193.36', 'node_port': 8881}, 2: {'latency': 20.0, 'id': 2, 'node_ip': '172.16.193.37', 'node_port': 8882}, 3: {'latency': 20.0, 'id': 3, 'node_ip': '172.16.193.45', 'node_port': 8883}}}
+       [20., 20., 20., 20., -1.]], 'IPs_ADDRESS': ['172.16.193.37', '172.16.193.4', '172.16.193.43', '172.16.193.45'], 'infos': {0: {'latency': 20.0, 'id': 0, 'node_ip': '172.16.193.37', 'node_port': 8880}, 1: {'latency': 20.0, 'id': 1, 'node_ip': '172.16.193.4', 'node_port': 8881}, 2: {'latency': 20.0, 'id': 2, 'node_ip': '172.16.193.43', 'node_port': 8882}, 3: {'latency': 20.0, 'id': 3, 'node_ip': '172.16.193.45', 'node_port': 8883}}}
     
     
     job_injector = JobInjector(
