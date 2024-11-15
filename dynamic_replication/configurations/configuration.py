@@ -124,7 +124,7 @@ class Configuration:
             p.apt(name=['redis-server'],state="present",)
             p.command(
                     task_name="Start redis with a pecifique config",
-                    cmd=f"redis-server --bind 0.0.0.0 --protected-mode no --maxmemory {storage}mb --port {self.db_listening_port}", 
+                    cmd=command, #f"redis-server --bind 0.0.0.0 --protected-mode no --maxmemory {storage}mb --port {self.db_listening_port}", 
                     background=True
                 )
         return True

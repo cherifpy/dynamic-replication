@@ -30,7 +30,7 @@ import requests
 import os
 import threading
 import random
-random.seed(1)
+#random.seed(1)
 
 class JobInjector:
     def __init__(self,nb_nodes ,graphe, ip, local_execution) -> None:
@@ -69,7 +69,7 @@ class JobInjector:
         self.jobs_list = {} 
         self.dataset_counter = 0
         self.nb_jobs = 0
-        self.id_dataset = 10
+        self.id_dataset = 0
         self.running_job = {}
         self.historiques = {}
 
@@ -311,6 +311,7 @@ class JobInjector:
                 self.waiting_list.pop(index)
 
     def selectHostsNodes(self):
+
         availabel_nodes = self.getAvailabledNodes()
         if len(availabel_nodes) < NB_REPLICAS_INIT:
             return copy.deepcopy(availabel_nodes)
@@ -427,6 +428,8 @@ if __name__ == "__main__":
        [20., 20., -1., 20., 20.],
        [20., 20., 20., -1., 20.],
        [20., 20., 20., 20., -1.]], 'IPs_ADDRESS': ['172.16.193.20', '172.16.193.36', '172.16.193.37', '172.16.193.45'], 'infos': {0: {'latency': 20.0, 'id': 0, 'node_ip': '172.16.193.20', 'node_port': 8880}, 1: {'latency': 20.0, 'id': 1, 'node_ip': '172.16.193.36', 'node_port': 8881}, 2: {'latency': 20.0, 'id': 2, 'node_ip': '172.16.193.37', 'node_port': 8882}, 3: {'latency': 20.0, 'id': 3, 'node_ip': '172.16.193.45', 'node_port': 8883}}}
+    
+    
     job_injector = JobInjector(
         nb_nodes = NB_NODES,
         graphe= data["graphe_infos"],
