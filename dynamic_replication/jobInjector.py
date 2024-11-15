@@ -369,9 +369,10 @@ class JobInjector:
         client = redis.Redis(host=ip_node, port=BD_LISTENING_PORT, db=0, decode_responses=True)
         self.last_node_recieved = ip_node
         try:
-            r = client.set(f"{self.dataset_counter}", content)
+            r = client.set(id_ds, content)
+            #r = client.exists()
             print(f'replica ajoutée sur le noued {id_node} {r}\n')
-            return r
+            return True
         except:
             return False
 
