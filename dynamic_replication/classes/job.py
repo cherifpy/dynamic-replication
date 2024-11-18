@@ -23,6 +23,7 @@ class Job:
         self.finishing_time = 0
         self.executing_tasks = []
         self.finished_tasks = []
+        self.transfert_time = []
         Job.nb_job +=1
 
     @classmethod

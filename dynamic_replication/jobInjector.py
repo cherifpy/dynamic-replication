@@ -97,13 +97,13 @@ class JobInjector:
                 host_with_replica = []
                 for i, host in enumerate(host_nodes):
                     
-                    r = self.replicate(host, job_id, job.id_dataset, job.size_dataset)
+                    r, t_transfert = self.replicate(host, job_id, job.id_dataset, job.size_dataset)
                     if r: 
                         print(f"{i+1} Replica sended")
                         self.writeOutput(f"Replica of dataset {job.id_dataset} sended to {host}")
                         host_with_replica.append(host)
                         job.tasks_list[i].host_node = host
-                    
+                        job.transfert_time = t_transfert
                     else: 
                         print("no replica sended")
 
@@ -208,8 +208,8 @@ class JobInjector:
                     self.writeOutput(f"Task {task.task_id} on job {job_id} finished")
                     task.is_finished = True
                     task.state = "Finished"
-                    t_time = transfertTime(BANDWIDTH, self.graphe_infos[self.id][task.host_node], job.size_dataset)
-                    self.wrtieStatsOnTasks(f"{job_id},{task.task_id},{task.host_node},{task.starting_time},{task.execution_time + task.starting_time},{task.execution_time},{task.id_dataset},{t_time}")
+                    #t_time = transfertTime(BANDWIDTH, self.graphe_infos[self.id][task.host_node], job.size_dataset)
+                    self.wrtieStatsOnTasks(f"{job_id},{task.task_id},{task.host_node},{task.starting_time},{task.execution_time + task.starting_time},{task.execution_time},{task.id_dataset},{job.transfert_time}")
                     if job.nb_task_not_lunched > 0: #arrived here
                         
                         for n_task in job.tasks_list:
@@ -235,11 +235,11 @@ class JobInjector:
                         #job.finishing_time = time.time()
                         
                         #end = True
-                t_time = transfertTime(BANDWIDTH, self.graphe_infos[self.id][task.host_node], job.size_dataset)       
-                if task.state == "Started" and time.time() - task.starting_time > t_time and not added:
+                #t_time = transfertTime(BANDWIDTH, self.graphe_infos[self.id][task.host_node], job.size_dataset)       
+                if task.state == "Started" and time.time() - task.starting_time > job.transfert_time and not added:
                     end = False
                     #t_time = transfertTime(BANDWIDTH, self.graphe_infos[self.id][task.host_node], job.size_dataset)
-                    added = self.addNewTaskOnNewNode(job_id,t_time)
+                    added = self.addNewTaskOnNewNode(job_id,job.transfert_time)
 
                     if added: 
                         job.nb_task_not_lunched -=1
@@ -291,7 +291,7 @@ class JobInjector:
     def generateJob(self,):
         self.id_dataset +=1
         nb_tasks = 5 #random.randint(1, MAX_NB_TASKS)
-        file_size = 2048 #random.randint(1, MAX_DATA_SIZE)
+        file_size = 1024 #random.randint(1, MAX_DATA_SIZE)
         execution_time = 5 #random.randint(1, MAX_EXECUTION_TIME)
 
         execution_times = []
@@ -358,12 +358,13 @@ class JobInjector:
         node_ip = self.nodes_infos[int(host)]["node_ip"]
         t_start = time.time()
         added = self.sendDataSet(id_node=host,ip_node=node_ip, id_ds=id_dataset, ds_size=ds_size) 
-        print(f"temps de transfert {time.time() - t_start}")
+        t_transfert = time.time() - t_start
+        print(f"temps de transfert {t_transfert}")
         if added:
             self.nb_data_trasnfert +=1
             cost = self.transfertCost(self.graphe_infos[self.id][host], ds_size)
             #self.writeTransfert(f"{job_id},{id_dataset},{self.id},{host},{ds_size},{cost},transfert1\n")
-        return added
+        return added,t_transfert
             
     
     def sendDataSet(self,id_node, ip_node, id_ds, ds_size):
