@@ -1,6 +1,7 @@
 
 #here i have to manage replica
 import copy
+import multiprocessing.process
 import redis
 from experiments.params import  (
     SERVER_REPLICA_MANAGER_PORT, 
@@ -238,7 +239,7 @@ class JobInjector:
                 if task.state == "Started" and time.time() - task.starting_time > t_time and not added:
                     end = False
                     #t_time = transfertTime(BANDWIDTH, self.graphe_infos[self.id][task.host_node], job.size_dataset)
-                    added = self.addNewTaskOnNewNode(job_id)
+                    added = self.addNewTaskOnNewNode(job_id,t_time)
 
                     if added: 
                         job.nb_task_not_lunched -=1
@@ -255,7 +256,7 @@ class JobInjector:
             del self.running_job[id]
         return True
 
-    def addNewTaskOnNewNode(self, job_id):
+    def addNewTaskOnNewNode(self, job_id,t_time):
 
         job = self.running_job[job_id]
         if job.nb_task_not_lunched == 0:
@@ -266,9 +267,9 @@ class JobInjector:
             print(-job.nb_task_not_lunched)
             task = job.tasks_list[-job.nb_task_not_lunched]
 
-            r = self.replicate(id_node,job.id, id_dataset=job.id_dataset, ds_size=job.size_dataset)
+            r = self.replicateOnThread(id_node,job.id, id_dataset=job.id_dataset, ds_size=job.size_dataset)
 
-            if r:
+            if True:
                 self.writeOutput(f"Replica of dataset {job.id_dataset} sended to {id_node}")
                 rep, latency = self.sendTaskToNode(id_node,job.id,task.execution_time,job.id_dataset)
 
@@ -277,7 +278,7 @@ class JobInjector:
                     task.state = "Started"
                     job.executing_tasks.append((len(job.executing_tasks), task.task_id))
                     print(job.executing_tasks)
-                    task.starting_time = rep['starting_time']
+                    task.starting_time = rep['starting_time']+t_time
                     task.executed = True
                     task.host_node = id_node
                     job.starting_times.append(rep['starting_time'])
@@ -290,7 +291,7 @@ class JobInjector:
     def generateJob(self,):
         self.id_dataset +=1
         nb_tasks = 5 #random.randint(1, MAX_NB_TASKS)
-        file_size = 4096 #random.randint(1, MAX_DATA_SIZE)
+        file_size = 2048 #random.randint(1, MAX_DATA_SIZE)
         execution_time = 5 #random.randint(1, MAX_EXECUTION_TIME)
 
         execution_times = []
@@ -305,7 +306,7 @@ class JobInjector:
             size_dataset=file_size
         )
 
-        job.tasks_list = [Task(f'task_{i}', random.randint(0,10), self.id_dataset) for i in range(nb_tasks)]
+        job.tasks_list = [Task(f'task_{i}', random.randint(1,5), self.id_dataset) for i in range(nb_tasks)]
 
         self.jobs_list[self.nb_jobs] = job
         self.nb_jobs +=1
@@ -406,7 +407,12 @@ class JobInjector:
 
         return response.json(), self.graphe_infos[self.id][id_node]
     
-    
+    def replicateOnThread(self, host,job_id, id_dataset, ds_size):
+        p = multiprocessing.Process(target=self.replicate, args=(host,job_id, id_dataset, ds_size))
+        p.start()
+
+        return p
+
     def transfertCost(self, latency, data_size):
         bandwith_in_bits = BANDWIDTH*1024*1024*8
         size_in_bits = data_size*1024*8
@@ -417,7 +423,7 @@ class JobInjector:
     def writeStates(self,str):
         path = "/tmp/temps_execution.txt"
         self.stats = open(path,'a')
-        self.stats.write(f"{str}\n")
+        self.stats.write(f"{str}\n") 
         self.stats.close()
 
     def wrtieStatsOnTasks(self,str):
