@@ -265,6 +265,7 @@ class JobInjector:
             job.ids_nodes.append(id_node)
             print(-job.nb_task_not_lunched)
             task = job.tasks_list[-job.nb_task_not_lunched]
+
             r = self.replicate(id_node,job.id, id_dataset=job.id_dataset, ds_size=job.size_dataset)
 
             if r:
@@ -289,7 +290,7 @@ class JobInjector:
     def generateJob(self,):
         self.id_dataset +=1
         nb_tasks = 5 #random.randint(1, MAX_NB_TASKS)
-        file_size = 19456 #random.randint(1, MAX_DATA_SIZE)
+        file_size = 4096 #random.randint(1, MAX_DATA_SIZE)
         execution_time = 5 #random.randint(1, MAX_EXECUTION_TIME)
 
         execution_times = []
@@ -304,7 +305,7 @@ class JobInjector:
             size_dataset=file_size
         )
 
-        job.tasks_list = [Task(f'task_{i}', random.random(0,10), self.id_dataset) for i in range(nb_tasks)]
+        job.tasks_list = [Task(f'task_{i}', random.randint(0,10), self.id_dataset) for i in range(nb_tasks)]
 
         self.jobs_list[self.nb_jobs] = job
         self.nb_jobs +=1
@@ -354,7 +355,9 @@ class JobInjector:
     def replicate(self, host,job_id, id_dataset, ds_size):
 
         node_ip = self.nodes_infos[int(host)]["node_ip"]
+        t_start = time.time()
         added = self.sendDataSet(id_node=host,ip_node=node_ip, id_ds=id_dataset, ds_size=ds_size) 
+        print(f"temps de transfert {time.time() - t_start}")
         if added:
             self.nb_data_trasnfert +=1
             cost = self.transfertCost(self.graphe_infos[self.id][host], ds_size)
