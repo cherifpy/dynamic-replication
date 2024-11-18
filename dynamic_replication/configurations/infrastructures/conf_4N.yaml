@@ -2,7 +2,7 @@
 job_name: dynamic_replication
 user_id: csimohammed
 exp_env: debian11-min
-exp_walltime: 02:00:00
+exp_walltime: 03:00:00
 execution_local: False
 machines:
   - cluster: ecotype

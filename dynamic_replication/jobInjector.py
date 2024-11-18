@@ -73,6 +73,7 @@ class JobInjector:
         self.id_dataset = 0
         self.running_job = {}
         self.historiques = {}
+        self.running_tasks = []
 
 
     def start(self,):
@@ -120,6 +121,7 @@ class JobInjector:
                         job.tasks_list[i].executed = True
                         job.tasks_list[i].state = "Started"
                         job.executing_tasks.append((i, job.tasks_list[i].task_id))
+                        self.running_job.append(job.tasks_list[i])
                         job.ids_nodes.append(host)
                         job_started = True
                         job.starting_times.append(rep['starting_time'])
@@ -249,6 +251,7 @@ class JobInjector:
                             new_task.host_node = task.host_node
                             print(f"========= new task on job {job_id} started at node {task.host_node}")
                             self.writeOutput(f"Task {new_task.task_id} of job {job_id} started on node {task.host_node}")
+                            self.running_job.append(new_task)
                             print(job.executing_tasks)
                         else:
                             print("didn't start")
@@ -328,7 +331,7 @@ class JobInjector:
         job = self.running_job[job_id]
         if job.nb_task_not_lunched == 0:
             return False
-        id_node = self.getAvailabelNodeForReplicating()
+        id_node = self.getAvailabelNodeV1()
         if id_node:
             job.ids_nodes.append(id_node)
             print(-job.nb_task_not_lunched)
@@ -351,6 +354,7 @@ class JobInjector:
                     job.starting_times.append(rep['starting_time'])
                     print(f"========= other task on job {job.id} started on node {job.tasks_list[-job.nb_task_not_lunched].host_node} at {job.tasks_list[-job.nb_task_not_lunched].starting_time}")
                     self.writeOutput(f"Task {task.task_id} of job {job_id} started on node {task.host_node}")
+                    self.running_job.append(task)
                     return True
                 
         return False
@@ -418,7 +422,19 @@ class JobInjector:
                 
         return None if len(candidates) == 0 else random.sample(candidates,1)[0]
     
+    def getAvailabelNodeV1(self):
+        nodes = [id for id in range(self.nb_nodes)]
+        candidates = copy.deepcopy(nodes)
+        to_remove = []
+        for i, task in enumerate(self.running_tasks):
+            if task.starting_time + task.executing_time > time.time() and task.host_node in candidates:
+                candidates.remove(task.host_node)
+            if task.starting_time + task.executing_time < time.time():
+                to_remove.append(i)
 
+        for i in to_remove:
+            self.running_tasks.pop(i)
+        return candidates                
 
     def replicate(self, host,job_id, id_dataset, ds_size):
 
