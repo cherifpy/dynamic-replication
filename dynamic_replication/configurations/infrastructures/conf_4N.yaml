@@ -26,48 +26,48 @@ machines:
     roles: [E]
     storage: 40
 network_constraints:
-  - default_delay: 20ms
+  - default_delay: 100ms
     default_rate: 100mbit
     constraints: 
       - src: A 
         dst: B
-        delay: 20ms
+        delay: 100ms
         symmetric: True
       - src: A 
         dst: C
-        delay: 20ms
+        delay: 100ms
         symmetric: True
       - src: A 
         dst: D
-        delay: 20ms
+        delay: 100ms
         symmetric: True
       - src: B
         dst: C
-        delay: 20ms
+        delay: 100ms
         symmetric: True
       - src: B
         dst: D
-        delay: 20ms
+        delay: 100ms
         symmetric: True
       - src: C 
         dst: D
-        delay: 20ms
+        delay: 100ms
         symmetric: True
       - src: E 
         dst: B
-        delay: 20ms
+        delay: 100ms
         symmetric: True
       - src: E 
         dst: C
-        delay: 20ms
+        delay: 100ms
         symmetric: True
       - src: E 
         dst: D
-        delay: 20ms
+        delay: 100ms
         symmetric: True
       - src: E
         dst: A
-        delay: 20ms
+        delay: 100ms
         symmetric: True
 
 

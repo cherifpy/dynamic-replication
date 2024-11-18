@@ -200,8 +200,9 @@ class JobInjector:
             for i, task_id in job.executing_tasks:
                 
                 task = job.tasks_list[i]
+                if task.state != "Finished": end = False
                 if  task.state == "Started" and task.starting_time + task.execution_time < time.time():
-                    end = False
+                    #end = False
                     print(f"========= task on job {job_id} finished")
                     self.writeOutput(f"Task {task.task_id} on job {job_id} finished")
                     task.is_finished = True
@@ -233,10 +234,10 @@ class JobInjector:
                         #job.finishing_time = time.time()
                         
                         #end = True
-                            
-                if task.state == "Started" and time.time() - task.starting_time > 3 and not added:
+                t_time = transfertTime(BANDWIDTH, self.graphe_infos[self.id][task.host_node], job.size_dataset)       
+                if task.state == "Started" and time.time() - task.starting_time > t_time and not added:
                     end = False
-                    t_time = transfertTime(BANDWIDTH, self.graphe_infos[self.id][task.host_node], job.size_dataset)
+                    #t_time = transfertTime(BANDWIDTH, self.graphe_infos[self.id][task.host_node], job.size_dataset)
                     added = self.addNewTaskOnNewNode(job_id)
 
                     if added: 
@@ -288,7 +289,7 @@ class JobInjector:
     def generateJob(self,):
         self.id_dataset +=1
         nb_tasks = 5 #random.randint(1, MAX_NB_TASKS)
-        file_size = 1024*6 #random.randint(1, MAX_DATA_SIZE)
+        file_size = 19456 #random.randint(1, MAX_DATA_SIZE)
         execution_time = 5 #random.randint(1, MAX_EXECUTION_TIME)
 
         execution_times = []
@@ -303,7 +304,7 @@ class JobInjector:
             size_dataset=file_size
         )
 
-        job.tasks_list = [Task(f'task_{i}', random.randint(2,10), self.id_dataset) for i in range(nb_tasks)]
+        job.tasks_list = [Task(f'task_{i}', random.random(0,10), self.id_dataset) for i in range(nb_tasks)]
 
         self.jobs_list[self.nb_jobs] = job
         self.nb_jobs +=1
