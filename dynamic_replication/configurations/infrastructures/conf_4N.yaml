@@ -27,7 +27,7 @@ machines:
     storage: 40
 network_constraints:
   - default_delay: 100ms
-    default_rate: 100mbit
+    default_rate: 10mbit
     constraints: 
       - src: A 
         dst: B

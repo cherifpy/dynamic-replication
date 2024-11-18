@@ -64,7 +64,7 @@ if True:
     )
     
     provider = config.setReservation()
-    netem = config.setNetworkConstraintes()
+    #netem = config.setNetworkConstraintes()
 
     ## deplot memcached
     #config.deployMemcached(port=BD_LISTENING_PORT)

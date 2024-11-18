@@ -103,7 +103,7 @@ class JobInjector:
                         self.writeOutput(f"Replica of dataset {job.id_dataset} sended to {host}")
                         host_with_replica.append(host)
                         job.tasks_list[i].host_node = host
-                        job.transfert_time = t_transfert
+                        job.transfert_time = transfertTime(BANDWIDTH, 100, job.size_dataset)
                     else: 
                         print("no replica sended")
 
@@ -115,7 +115,7 @@ class JobInjector:
                         self.writeOutput(f"Task {i} of job {job_id} started on node {host}")
                         print("========= Job started")
                         print(f"========= Task of job {job_id} started on node {host}")
-                        job.tasks_list[i].starting_time = rep['starting_time']
+                        job.tasks_list[i].starting_time = rep['starting_time']+job.transfert_time
                         job.tasks_list[i].host_id = host_nodes
                         job.tasks_list[i].executed = True
                         job.tasks_list[i].state = "Started"
@@ -151,9 +151,9 @@ class JobInjector:
                 j+=1
 
             self.analyseOnCaseTwo()
-            if len(self.running_job.keys()) == 0:
-                print("========= All jobs executed")
-                break
+            #if len(self.running_job.keys()) == 0:
+            #    print("========= All jobs executed")
+            #    break
 
 
     def analyseOnCaseOne(self):
@@ -525,4 +525,4 @@ if __name__ == "__main__":
     
     
     job_injector.nodes_infos = data["infos"]
-    job_injector.startV2()
+    job_injector.start()
