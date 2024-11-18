@@ -103,7 +103,7 @@ class JobInjector:
                         print(f"{i+1} Replica sended")
                         self.writeOutput(f"Replica of dataset {job.id_dataset} sended to {host}")
                         host_with_replica.append(host)
-                        job.tasks_list[i].host_node = host
+                        
                         job.transfert_time = transfertTime(BANDWIDTH, 100, job.size_dataset)
                     else: 
                         print("no replica sended")
@@ -117,11 +117,11 @@ class JobInjector:
                         print("========= Job started")
                         print(f"========= Task of job {job_id} started on node {host}")
                         job.tasks_list[i].starting_time = rep['starting_time']+job.transfert_time
-                        job.tasks_list[i].host_id = host
+                        job.tasks_list[i].host_node = host
                         job.tasks_list[i].executed = True
                         job.tasks_list[i].state = "Started"
                         job.executing_tasks.append((i, job.tasks_list[i].task_id))
-                        self.running_tasks.append(job.tasks_list[i])
+                        self.running_tasks.append((job_id, job.tasks_list[i].task_id, job.tasks_list[i].starting_time, job.tasks_list[i].execution_time, job.tasks_list[i].host_node))
                         job.ids_nodes.append(host)
                         job_started = True
                         job.starting_times.append(rep['starting_time'])
@@ -251,7 +251,7 @@ class JobInjector:
                             new_task.host_node = task.host_node
                             print(f"========= new task on job {job_id} started at node {task.host_node}")
                             self.writeOutput(f"Task {new_task.task_id} of job {job_id} started on node {task.host_node}")
-                            self.running_tasks.append(new_task)
+                            self.running_tasks.append((job_id, new_task.task_id, new_task.starting_time, new_task.execution_time, new_task.host_node))
                             print(job.executing_tasks)
                         else:
                             print("didn't start")
@@ -296,7 +296,6 @@ class JobInjector:
                 print(f"{i+1} Replica sended")
                 self.writeOutput(f"Replica of dataset {job.id_dataset} sended to {host}")
                 host_with_replica.append(host)
-                job.tasks_list[i].host_node = host
                 job.transfert_time = t_transfert
             else: 
                 print("no replica sended")
@@ -321,6 +320,7 @@ class JobInjector:
                 job.job_starting_time = time.time()
             if job_started:
                 self.running_job[job_id] = job
+
     def startAJobOnThread(self, index):
         p = multiprocessing.Process(target=self.startAJob, args=(index,))
         p.start()
@@ -354,7 +354,7 @@ class JobInjector:
                     job.starting_times.append(rep['starting_time'])
                     print(f"========= other task on job {job.id} started on node {job.tasks_list[-job.nb_task_not_lunched].host_node} at {job.tasks_list[-job.nb_task_not_lunched].starting_time}")
                     self.writeOutput(f"Task {task.task_id} of job {job_id} started on node {task.host_node}")
-                    self.running_tasks.append(task)
+                    self.running_tasks.append((job_id, task.task_id, task.starting_time, task.execution_time, task.host_node))
                     return True
                 
         return False
@@ -426,10 +426,10 @@ class JobInjector:
         nodes = [id for id in range(self.nb_nodes)]
         candidates = copy.deepcopy(nodes)
         to_remove = []
-        for i, task in enumerate(self.running_tasks):
-            if task.starting_time + task.execution_time > time.time() and task.host_node in candidates:
-                candidates.remove(task.host_node)
-            if task.starting_time + task.execution_time < time.time():
+        for i, task in self.running_tasks:#job_id, task_id, starting_time, execution_time, host_node
+            if task[2] + task[3] > time.time() and task[4] in candidates:  
+                candidates.remove(task[4])
+            if task[2] + task[3] < time.time():
                 to_remove.append(i)
 
         for i in to_remove:
@@ -526,12 +526,11 @@ class JobInjector:
         
 if __name__ == "__main__":
 
-    data ={'IP_ADDRESS': '172.16.193.9', 'graphe_infos': [[ -1., 100., 100., 100., 100.],
+    data ={'IP_ADDRESS': '172.16.193.8', 'graphe_infos': [[ -1., 100., 100., 100., 100.],
        [100.,  -1., 100., 100., 100.],
        [100., 100.,  -1., 100., 100.],
        [100., 100., 100.,  -1., 100.],
-       [100., 100., 100., 100.,  -1.]], 'IPs_ADDRESS': ['172.16.193.45', '172.16.193.46', '172.16.193.6', '172.16.193.8'], 'infos': {0: {'latency': 100.0, 'id': 0, 'node_ip': '172.16.193.45', 'node_port': 8880}, 1: {'latency': 100.0, 'id': 1, 'node_ip': '172.16.193.46', 'node_port': 8881}, 2: {'latency': 100.0, 'id': 2, 'node_ip': '172.16.193.6', 'node_port': 8882}, 3: {'latency': 100.0, 'id': 3, 'node_ip': '172.16.193.8', 'node_port': 8883}}}
-    
+       [100., 100., 100., 100.,  -1.]], 'IPs_ADDRESS': ['172.16.193.45', '172.16.193.46', '172.16.193.5', '172.16.193.6'], 'infos': {0: {'latency': 100.0, 'id': 0, 'node_ip': '172.16.193.45', 'node_port': 8880}, 1: {'latency': 100.0, 'id': 1, 'node_ip': '172.16.193.46', 'node_port': 8881}, 2: {'latency': 100.0, 'id': 2, 'node_ip': '172.16.193.5', 'node_port': 8882}, 3: {'latency': 100.0, 'id': 3, 'node_ip': '172.16.193.6', 'node_port': 8883}}}
     job_injector = JobInjector(
         nb_nodes = NB_NODES,
         graphe= data["graphe_infos"],
