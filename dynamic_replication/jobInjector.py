@@ -264,10 +264,11 @@ class JobInjector:
                 if task.state == "Started" and time.time() - task.starting_time > job.transfert_time and not added:
                     end = False
                     #t_time = transfertTime(BANDWIDTH, self.graphe_infos[self.id][task.host_node], job.size_dataset)
-                    added = self.addNewTaskOnNewNode(job_id,job.transfert_time)
+                    added = self.addNewTasksOnNewNodes(job_id,job.transfert_time)
 
                     if added: 
-                        job.nb_task_not_lunched -=1
+                        pass
+                        #job.nb_task_not_lunched -=1
                         
                         #This change thinks in this cas i only add one replica peer job
                         #break
@@ -362,7 +363,40 @@ class JobInjector:
                     return True
                 
         return False
-        
+    
+    def addNewTasksOnNewNodes(self, job_id,t_time):
+
+        job = self.running_job[job_id]
+        if job.nb_task_not_lunched == 0:
+            return False
+        id_node = self.getAvailabelNodeForReplicating()
+        while id_node:
+            job.ids_nodes.append(id_node)
+            print(-job.nb_task_not_lunched)
+            task = job.tasks_list[-job.nb_task_not_lunched]
+
+            r = self.replicate(id_node,job.id, id_dataset=job.id_dataset, ds_size=job.size_dataset)
+
+            if True:
+                self.writeOutput(f"Replica of dataset {job.id_dataset} sended to {id_node}")
+                rep, latency = self.sendTaskToNode(id_node,job.id,task.execution_time,job.id_dataset)
+
+                if rep["started"]:
+                    job.ids_nodes.append(id_node)
+                    task.state = "Started"
+                    job.executing_tasks.append((len(job.executing_tasks), task.task_id))
+                    print(job.executing_tasks)
+                    task.starting_time = rep['starting_time']+t_time
+                    task.executed = True
+                    task.host_node = id_node
+                    job.starting_times.append(rep['starting_time'])
+                    print(f"========= other task on job {job.id} started on node {job.tasks_list[-job.nb_task_not_lunched].host_node} at {job.tasks_list[-job.nb_task_not_lunched].starting_time}")
+                    self.writeOutput(f"Task {task.task_id} of job {job_id} started on node {task.host_node}")
+                    self.running_tasks.append((job_id, task.task_id, task.starting_time, task.execution_time, task.host_node))
+                    job.nb_task_not_lunched -=1
+                id_node = self.getAvailabelNodeForReplicating()
+        return False
+
     def generateJob(self,):
         self.id_dataset +=1
         nb_tasks = 5 #random.randint(1, MAX_NB_TASKS)
