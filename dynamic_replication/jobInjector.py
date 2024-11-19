@@ -270,7 +270,7 @@ class JobInjector:
                         job.nb_task_not_lunched -=1
                         
                         #This change thinks in this cas i only add one replica peer job
-                        break
+                        #break
                         
 
             if end: delete.append(job_id)
@@ -381,7 +381,7 @@ class JobInjector:
             size_dataset=file_size
         )
 
-        job.tasks_list = [Task(f'task_{i}', random.randint(1,5), self.id_dataset) for i in range(nb_tasks)]
+        job.tasks_list = [Task(f'task_{i}', 5, self.id_dataset) for i in range(nb_tasks)]
 
         self.jobs_list[self.nb_jobs] = job
         self.nb_jobs +=1
