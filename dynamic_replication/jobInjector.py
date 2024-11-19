@@ -369,7 +369,7 @@ class JobInjector:
         job = self.running_job[job_id]
         if job.nb_task_not_lunched == 0:
             return False
-        id_node = self.getAvailabelNodeForReplicating()
+        id_node = self.getAvailabelNodeV2()
         while id_node:
             job.ids_nodes.append(id_node)
             print(-job.nb_task_not_lunched)
@@ -561,11 +561,13 @@ class JobInjector:
         
 if __name__ == "__main__":
 
-    data ={'IP_ADDRESS': '172.16.193.8', 'graphe_infos': [[ -1., 100., 100., 100., 100.],
+    data = {'IP_ADDRESS': '172.16.101.9', 'graphe_infos': [[ -1., 100., 100., 100., 100.],
        [100.,  -1., 100., 100., 100.],
        [100., 100.,  -1., 100., 100.],
        [100., 100., 100.,  -1., 100.],
-       [100., 100., 100., 100.,  -1.]], 'IPs_ADDRESS': ['172.16.193.45', '172.16.193.46', '172.16.193.5', '172.16.193.6'], 'infos': {0: {'latency': 100.0, 'id': 0, 'node_ip': '172.16.193.45', 'node_port': 8880}, 1: {'latency': 100.0, 'id': 1, 'node_ip': '172.16.193.46', 'node_port': 8881}, 2: {'latency': 100.0, 'id': 2, 'node_ip': '172.16.193.5', 'node_port': 8882}, 3: {'latency': 100.0, 'id': 3, 'node_ip': '172.16.193.6', 'node_port': 8883}}}
+       [100., 100., 100., 100.,  -1.]], 'IPs_ADDRESS': ['172.16.101.10', '172.16.101.27', '172.16.101.6', '172.16.101.7'], 'infos': {0: {'latency': 100.0, 'id': 0, 'node_ip': '172.16.101.10', 'node_port': 8880}, 1: {'latency': 100.0, 'id': 1, 'node_ip': '172.16.101.27', 'node_port': 8881}, 2: {'latency': 100.0, 'id': 2, 'node_ip': '172.16.101.6', 'node_port': 8882}, 3: {'latency': 100.0, 'id': 3, 'node_ip': '172.16.101.7', 'node_port': 8883}}}
+    
+    
     job_injector = JobInjector(
         nb_nodes = NB_NODES,
         graphe= data["graphe_infos"],
