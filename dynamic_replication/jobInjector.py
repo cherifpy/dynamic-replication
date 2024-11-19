@@ -254,9 +254,10 @@ class JobInjector:
                             self.running_tasks.append((job_id, new_task.task_id, new_task.starting_time, new_task.execution_time, new_task.host_node))
                             print(job.executing_tasks)
                         else:
+
                             print("didn't start")
-                    #else:
-                        #job.finishing_time = time.time()
+                    else:
+                        job.ids_nodes.remove(task.host_node)
                         
                         #end = True
                 #t_time = transfertTime(BANDWIDTH, self.graphe_infos[self.id][task.host_node], job.size_dataset)       
@@ -267,6 +268,9 @@ class JobInjector:
 
                     if added: 
                         job.nb_task_not_lunched -=1
+                        
+                        #This change thinks in this cas i only add one replica peer job
+                        break
                         
 
             if end: delete.append(job_id)
@@ -331,13 +335,13 @@ class JobInjector:
         job = self.running_job[job_id]
         if job.nb_task_not_lunched == 0:
             return False
-        id_node = self.getAvailabelNodeV1()
+        id_node = self.getAvailabelNodeForReplicating()
         if id_node:
             job.ids_nodes.append(id_node)
             print(-job.nb_task_not_lunched)
             task = job.tasks_list[-job.nb_task_not_lunched]
 
-            r = self.replicateOnThread(id_node,job.id, id_dataset=job.id_dataset, ds_size=job.size_dataset)
+            r = self.replicate(id_node,job.id, id_dataset=job.id_dataset, ds_size=job.size_dataset)
 
             if True:
                 self.writeOutput(f"Replica of dataset {job.id_dataset} sended to {id_node}")
@@ -420,20 +424,17 @@ class JobInjector:
                 if node in job.ids_nodes:
                     candidates.remove(node)
                 
-        return None if len(candidates) == 0 else random.sample(candidates,1)[0]
-    
-    def getAvailabelNodeV1(self):
-        nodes = [id for id in range(self.nb_nodes)]
-        candidates = copy.deepcopy(nodes)
-        to_remove = []
-        for i, task in self.running_tasks:#job_id, task_id, starting_time, execution_time, host_node
-            if task[2] + task[3] > time.time() and task[4] in candidates:  
-                candidates.remove(task[4])
-            if task[2] + task[3] < time.time():
-                to_remove.append(i)
+        return None if len(candidates) == 0 else random.sample(candidates,1)[0]  
 
-        for i in to_remove:
-            self.running_tasks.pop(i)
+    def getAvailabelNodeV2(self):
+        nodes = [id for id in range(self.nb_nodes)]
+        candidates = []
+        to_remove = []
+        for i, job_id in enumerate(self.running_job.keys()):
+            job = self.running_job[job_id]
+            for task in job.tasks_list:
+                if task.state == "Started" and task.host_node in nodes:
+                     nodes.remove(task.host_node)
 
         return None if len(candidates) == 0 else random.sample(candidates,1)[0]                
 
