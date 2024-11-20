@@ -61,13 +61,16 @@ if True:
 
     config = Configuration(
         config_file_path = PATH_TO_CONFIG_FILE,
+        nb_nodes=10,
+        cluster='paradox'
     )
+    
     
     provider = config.setReservation()
     #netem = config.setNetworkConstraintes()
 
     ## deplot memcached
-    #config.deployMemcached(port=BD_LISTENING_PORT)
+    #config.deployMemcached(port=BD_LISTENING_PORT)   
     rep =config.deployRedis(port=BD_LISTENING_PORT, storage= STORAGE_SPACE, eviction=True)
     print("installation de redis:", rep)
     NB_NODES = config.nb_sites

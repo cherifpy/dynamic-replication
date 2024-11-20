@@ -6,10 +6,11 @@ import requests
 import json
 import enoslib as en
 import logging 
+from  itertools import combinations
 
 class Configuration:
 
-    def __init__(self, cluster = None, config_file_path="/"):
+    def __init__(self, config_file_path="/", nb_nodes=None, cluster="paravance", latency = "60ms", bandwidth = "1gbit"):
         """
             classe constructor is used to create an instence of the class
             i dont know if i have to remove the param = cluster
@@ -23,17 +24,39 @@ class Configuration:
         self.walltime = self.parametres.get("exp_walltime")
         self.job_type = self.parametres.get("job_type",[])
         self.env_name = self.parametres.get("exp_env")
-        self.execution_local = self.parametres.get("execution_local")
+        self.execution_local = True #self.parametres.get("execution_local")
         self.user_id = self.parametres.get("user_id")
         self.provider = None
         self.emulation_conf = None
         self.monitoringDeployed = False
         self.start_time = -1
-        self.machines = [machine for machine in self.parametres.get('machines', [])]
-        self.sites = [machine["roles"][0] for machine in self.machines]
-        self.storage_capacities = [machine['storage'] for machine in self.machines]
+
+        if nb_nodes is not None:
+            self.machines = [{
+                "cluster": cluster,
+                "nodes": 1,
+                "roles": ['A'],
+                "storage": 512,
+            } for i in range(nb_nodes)]
+
+            self.sites = [machine["roles"][0] for machine in self.machines]
+            self.storage_capacities = [machine['storage'] for machine in self.machines]
+            tab = list(combinations(self.sites, 2))
+            self.contraintes = [{
+                "src": srt,
+                "dst": dst,
+                "delay": latency,
+                "symmetric": bandwidth,
+            } for srt,dst in tab]
+        
+        else:
+            self.machines = [machine for machine in self.parametres.get('machines', [])]
+            self.sites = [machine["roles"][0] for machine in self.machines]
+            self.storage_capacities = [machine['storage'] for machine in self.machines]        
+            self.contraintes = self.parametres.get('network_constraints',[{}])[0].get("constraints")
+        
+        
         self.roles = None
-        self.contraintes = self.parametres.get('network_constraints',[{}])[0].get("constraints")
         self.is_docker_deployed = False
         self.nb_sites = len(self.machines)
         self.python_libs:list = None
