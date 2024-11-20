@@ -8,8 +8,11 @@ from experiments.params import  (
     BD_LISTENING_PORT,
     MAX_EXECUTION_TIME,
     NB_REPLICAS_INIT,
+    MAX_DATA_SIZE,
+    MAX_NB_TASKS,
     BANDWIDTH,
     NB_NODES,
+    NB_JOBS,
 )
 
 from communication.send_data import recieveObject
@@ -137,25 +140,6 @@ class JobInjector:
                 break
     
 
-    def startV2(self,):
-        if not self.nodes_infos:
-            return False
-        self.exp_start_time = time.time()
-        job_id, job = self.generateJob()
-        self.waiting_list.append((job_id,job))
-
-        job_id, job = self.generateJob()
-        self.waiting_list.append((job_id,job))
-        j = 0
-        while True:
-            while j < len(self.waiting_list):
-                self.startAJobOnThread(j)
-                j+=1
-
-            self.analyseOnCaseTwo()
-            #if len(self.running_job.keys()) == 0:
-            #    print("========= All jobs executed")
-            #    break
 
 
     def analyseOnCaseOne(self):
@@ -385,10 +369,10 @@ class JobInjector:
         return False
 
     def generateJob(self,):
-        self.id_dataset +=1
-        nb_tasks = 5 #random.randint(1, MAX_NB_TASKS)
-        file_size = 1024 #random.randint(1, MAX_DATA_SIZE)
-        execution_time = 5 #random.randint(1, MAX_EXECUTION_TIME)
+        
+        nb_tasks = random.randint(1, MAX_NB_TASKS)
+        file_size = random.randint(1024, MAX_DATA_SIZE)
+        execution_time = random.uniform(0.1, MAX_EXECUTION_TIME)
 
         execution_times = []
 
@@ -402,13 +386,17 @@ class JobInjector:
             size_dataset=file_size
         )
 
-        job.tasks_list = [Task(f'task_{i}', 5, self.id_dataset) for i in range(nb_tasks)]
+        job.tasks_list = [Task(f'task_{i}', random.uniform(0.1, MAX_EXECUTION_TIME), self.id_dataset) for i in range(nb_tasks)]
 
         self.jobs_list[self.nb_jobs] = job
+        self.id_dataset +=1
         self.nb_jobs +=1
         return job.id, job#(nb_tasks, execution_times, file_size) 
     
-
+    def generateJobs(self,):
+        for i in range(NB_JOBS):
+            id, job = self.generateJob()
+            self.waiting_list.append((id,job))
 
     def selectHostsNodes(self):
 
@@ -528,12 +516,7 @@ class JobInjector:
         
 if __name__ == "__main__":
 
-    data = {'IP_ADDRESS': '172.16.101.9', 'graphe_infos': [[ -1., 100., 100., 100., 100.],
-       [100.,  -1., 100., 100., 100.],
-       [100., 100.,  -1., 100., 100.],
-       [100., 100., 100.,  -1., 100.],
-       [100., 100., 100., 100.,  -1.]], 'IPs_ADDRESS': ['172.16.101.10', '172.16.101.27', '172.16.101.6', '172.16.101.7'], 'infos': {0: {'latency': 100.0, 'id': 0, 'node_ip': '172.16.101.10', 'node_port': 8880}, 1: {'latency': 100.0, 'id': 1, 'node_ip': '172.16.101.27', 'node_port': 8881}, 2: {'latency': 100.0, 'id': 2, 'node_ip': '172.16.101.6', 'node_port': 8882}, 3: {'latency': 100.0, 'id': 3, 'node_ip': '172.16.101.7', 'node_port': 8883}}}
-    
+    data = 0
     
     job_injector = JobInjector(
         nb_nodes = NB_NODES,
@@ -541,7 +524,7 @@ if __name__ == "__main__":
         ip=data["IP_ADDRESS"],
         local_execution=False
     )
-    #job_injector.writeOutput(f"{data}")
+    job_injector.writeOutput(f"{data}")
     
     
     job_injector.nodes_infos = data["infos"]

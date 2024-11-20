@@ -195,3 +195,24 @@ def getAvailabledNodes(self):
                     candidates.remove(node)
                 
         return [] if len(candidates) == 0 else candidates
+
+
+    def startV2(self,):
+        if not self.nodes_infos:
+            return False
+        self.exp_start_time = time.time()
+        job_id, job = self.generateJob()
+        self.waiting_list.append((job_id,job))
+
+        job_id, job = self.generateJob()
+        self.waiting_list.append((job_id,job))
+        j = 0
+        while True:
+            while j < len(self.waiting_list):
+                self.startAJobOnThread(j)
+                j+=1
+
+            self.analyseOnCaseTwo()
+            #if len(self.running_job.keys()) == 0:
+            #    print("========= All jobs executed")
+            #    break
