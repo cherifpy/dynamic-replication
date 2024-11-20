@@ -10,7 +10,7 @@ from  itertools import combinations
 
 class Configuration:
 
-    def __init__(self, config_file_path="/", nb_nodes=None, cluster="paravance", latency = "60ms", bandwidth = "1gbit"):
+    def __init__(self, config_file_path="/", nb_nodes=None, cluster="paradoxe", latency = "60ms", bandwidth = "1gbit"):
         """
             classe constructor is used to create an instence of the class
             i dont know if i have to remove the param = cluster
@@ -19,7 +19,7 @@ class Configuration:
         self.config_file_path = config_file_path 
         self.parametres = self.readYamlFile(self.config_file_path)
         self.test = 0
-        self.cluster = cluster
+        
         self.username = self.parametres.get("username")
         self.walltime = self.parametres.get("exp_walltime")
         self.job_type = self.parametres.get("job_type",[])
@@ -35,8 +35,8 @@ class Configuration:
             self.machines = [{
                 "cluster": cluster,
                 "nodes": 1,
-                "roles": ['A'],
-                "storage": 512,
+                "roles": [f'Site_{i}'],
+                "storage": 90,
             } for i in range(nb_nodes)]
 
             self.sites = [machine["roles"][0] for machine in self.machines]
@@ -48,6 +48,7 @@ class Configuration:
                 "delay": latency,
                 "symmetric": bandwidth,
             } for srt,dst in tab]
+            self.cluster = cluster
         
         else:
             self.machines = [machine for machine in self.parametres.get('machines', [])]
