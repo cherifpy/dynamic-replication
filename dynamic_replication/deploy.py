@@ -62,10 +62,10 @@ if True:
     config = Configuration(
         config_file_path = PATH_TO_CONFIG_FILE,
         nb_nodes=10,
-        cluster='paradox'
+        cluster='paradoxe'
     )
     
-    
+
     provider = config.setReservation()
     #netem = config.setNetworkConstraintes()
 
