@@ -24,7 +24,7 @@ class Configuration:
         self.walltime = self.parametres.get("exp_walltime")
         self.job_type = self.parametres.get("job_type",[])
         self.env_name = self.parametres.get("exp_env")
-        self.execution_local = True #self.parametres.get("execution_local")
+        self.execution_local =self.parametres.get("execution_local")
         self.user_id = self.parametres.get("user_id")
         self.provider = None
         self.emulation_conf = None
