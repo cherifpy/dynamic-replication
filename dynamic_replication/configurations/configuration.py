@@ -19,7 +19,7 @@ class Configuration:
         self.config_file_path = config_file_path 
         self.parametres = self.readYamlFile(self.config_file_path)
         self.test = 0
-        
+        self.cluster = None
         self.username = self.parametres.get("username")
         self.walltime = self.parametres.get("exp_walltime")
         self.job_type = self.parametres.get("job_type",[])
