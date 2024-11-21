@@ -140,7 +140,7 @@ def startAJobOnThread(self, index):
         p.start()
         return p
 
-def addNewTaskOnNewNode(self, job_id,t_time):
+    def addNewTaskOnNewNode(self, job_id,t_time):
 
         job = self.running_job[job_id]
         if job.nb_task_not_lunched == 0:
