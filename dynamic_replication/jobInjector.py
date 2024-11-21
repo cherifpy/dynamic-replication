@@ -88,13 +88,13 @@ class JobInjector:
 
         job_id, job = self.generateJob()
         self.waiting_list.append((job_id,job))"""
-        self.generateJobs()
+        job_list = self.generateJobs()
         j = 0
         while True:
-            while j < len(self.waiting_list):
+            while j < len(job_list):
                 job_started = False
                 
-                job_id, job = self.waiting_list[j]
+                job_id, job = job_list[j]
                 
                 self.dataset_counter += 1
                 
@@ -135,7 +135,9 @@ class JobInjector:
                 if job_started:
                     self.running_job[job_id] = job
                     j+=1
-
+                    self.waiting_list.append((job_id, job))
+                self.analyseOnCaseTwoWithOneReplica()
+                
             self.analyseOnCaseTwoWithOneReplica()
             if len(self.running_job.keys()) == 0:
                 print("========= All jobs executed")
@@ -428,10 +430,11 @@ class JobInjector:
         return job.id, job#(nb_tasks, execution_times, file_size) 
     
     def generateJobs(self,):
+        job_list = []
         for i in range(NB_JOBS):
             id, job = self.generateJob()
-            self.waiting_list.append((id,job))
-
+            job_list.append((id,job))
+        return job_list
     def selectHostsNodes(self):
 
         availabel_nodes = self.getAvailabledNodes()
