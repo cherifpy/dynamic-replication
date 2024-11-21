@@ -108,8 +108,9 @@ class JobInjector:
                         print(f"{i+1} Replica sended")
                         self.writeOutput(f"Replica of dataset {job.id_dataset} sended to {host}")
                         host_with_replica.append(host)
-                        
+                        t_start = time.time()
                         job.transfert_time = transfertTime(BANDWIDTH, 100, job.size_dataset)
+                        self.wrtieStatsOnTasks(f"{-1},{job_id},{host},{t_start},{t_start + t_transfert},{t_transfert},{job.id_dataset}")
                     else: 
                         print("no replica sended")
 
@@ -479,8 +480,10 @@ class JobInjector:
         node_ip = self.nodes_infos[int(host)]["node_ip"]
         t_start = time.time()
         added = self.sendDataSet(id_node=host,ip_node=node_ip, id_ds=id_dataset, ds_size=ds_size) 
+        t_end = time.time()
         t_transfert = time.time() - t_start
         print(f"temps de transfert {t_transfert}")
+        
         if added:
             self.nb_data_trasnfert +=1
             cost = self.transfertCost(self.graphe_infos[self.id][host], ds_size)
