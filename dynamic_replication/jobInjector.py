@@ -110,7 +110,8 @@ class JobInjector:
                         host_with_replica.append(host)
                         t_start = time.time()
                         job.transfert_time = transfertTime(BANDWIDTH, 100, job.size_dataset)
-                        self.wrtieStatsOnTasks(f"{-1},{job_id},{host},{t_start},{t_start + t_transfert},{t_transfert},{job.id_dataset}")
+                        self.wrtieStatsOnTasks(f"{-1},{job_id},{host},{t_start},{t_start + job.transfert_time},{job.transfert_time},{job.id_dataset}")
+                        #self.wrtieStatsOnTasks(f"{job_id},{task.task_id},{task.host_node},{task.starting_time},{task.execution_time + task.starting_time},{task.execution_time},{task.id_dataset}")
                     else: 
                         print("no replica sended")
 
@@ -350,9 +351,9 @@ class JobInjector:
             job.ids_nodes.append(id_node)
             print(-job.nb_task_not_lunched)
             task = job.tasks_list[-job.nb_task_not_lunched]
-
+            t_start = time.time()
             r = self.replicate(id_node,job.id, id_dataset=job.id_dataset, ds_size=job.size_dataset)
-
+            self.wrtieStatsOnTasks(f"{-1},{job_id},{id_node},{t_start},{t_start + job.transfert_time},{job.transfert_time},{job.id_dataset}")
             if True:
                 self.writeOutput(f"Replica of dataset {job.id_dataset} sended to {id_node}")
                 rep, latency = self.sendTaskToNode(id_node,job.id,task.execution_time,job.id_dataset)
@@ -382,9 +383,9 @@ class JobInjector:
             job.ids_nodes.append(id_node)
             print(-job.nb_task_not_lunched)
             task = job.tasks_list[-job.nb_task_not_lunched]
-
+            t_start = time.time()
             r = self.replicate(id_node,job.id, id_dataset=job.id_dataset, ds_size=job.size_dataset)
-
+            self.wrtieStatsOnTasks(f"{-1},{job_id},{id_node},{t_start},{t_start + job.transfert_time},{job.transfert_time},{job.id_dataset}")
             if True:
                 self.writeOutput(f"Replica of dataset {job.id_dataset} sended to {id_node}")
                 rep, latency = self.sendTaskToNode(id_node,job.id,task.execution_time,job.id_dataset)
