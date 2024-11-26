@@ -7,6 +7,7 @@ from experiments.params import  (
     SERVER_REPLICA_MANAGER_PORT, 
     BD_LISTENING_PORT,
     MAX_EXECUTION_TIME,
+    MAX_REPLICA_NUMBER,
     NB_REPLICAS_INIT,
     MAX_DATA_SIZE,
     MAX_NB_TASKS,
@@ -105,6 +106,7 @@ class JobInjector:
                     
                     r, t_transfert = self.replicate(host, job_id, job.id_dataset, job.size_dataset)
                     if r: 
+                        job.nb_replicas +=1
                         print(f"{i+1} Replica sended")
                         self.writeOutput(f"Replica of dataset {job.id_dataset} sended to {host}")
                         host_with_replica.append(host)
@@ -458,13 +460,14 @@ class JobInjector:
                         
                         #end = True
                 #t_time = transfertTime(BANDWIDTH, self.graphe_infos[self.id][task.host_node], job.size_dataset)       
-                if task.state == "Started" and time.time() - task.starting_time > job.transfert_time and not added and job.nb_task_not_lunched > 0:
+                if task.state == "Started" and time.time() - task.starting_time > job.transfert_time and not added and job.nb_task_not_lunched > 0 and job.nb_replicas < MAX_REPLICA_NUMBER:
                     end = False
                     #t_time = transfertTime(BANDWIDTH, self.graphe_infos[self.id][task.host_node], job.size_dataset)
                     added = self.addNewTaskOnNewNode(job_id,job.transfert_time)
 
                     if added: 
                         #pass
+                        job.nb_replicas +=1
                         job.nb_task_not_lunched -=1
                         #This change thinks in this cas i only add one replica peer job
                         print(f'une replica ajouter au job {job_id}')

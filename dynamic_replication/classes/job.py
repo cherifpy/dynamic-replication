@@ -24,6 +24,7 @@ class Job:
         self.executing_tasks = []
         self.finished_tasks = []
         self.transfert_time = []
+        self.nb_replicas = 0
         Job.nb_job +=1
 
     @classmethod
