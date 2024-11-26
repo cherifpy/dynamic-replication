@@ -89,7 +89,7 @@ class JobInjector:
 
         job_id, job = self.generateJob()
         self.waiting_list.append((job_id,job))"""
-        job_list = self.generateJobs()
+        job_list = self.staticJobs()
         j = 0
         while True:
             while j < len(job_list):
@@ -340,6 +340,7 @@ class JobInjector:
             del self.running_job[id]
         return True  
     
+
     def analyseOnCaseTwoWithOneReplicaWithRandomOrder(self):
         delete = []
         added = False
@@ -494,7 +495,7 @@ class JobInjector:
             return self.running_job.keys()
         
         if nb_availabel_nodes < (nb_jobs//2):
-            sorted_keys = sorted(self.running_job.keys(), key=lambda k: self.running_job[k].execution_times)
+            sorted_keys = sorted(self.running_job.keys(), key=lambda k: self.running_job[k].execution_times, reverse=True)
             return sorted_keys       
         
         return self.running_job.keys()
@@ -606,6 +607,34 @@ class JobInjector:
             id, job = self.generateJob()
             job_list.append((id,job))
         return job_list
+    
+    def staticJobs(self,):
+        infos = [
+            (5,0.5, 0,4120),
+            (3,1, 1,3048),
+            (4,0.2, 2,1024),
+            (5,0.6, 3,2504),
+            (4,0.8, 4,3304),
+        ]
+        job_list = []
+        for i, info in enumerate(infos):
+            job = Job(
+                nb_task=info[0],
+                execution_times=info[1],
+                id_dataset=info[2],
+                size_dataset=info[3]
+            )
+
+            job.tasks_list = [Task(f'task_{i}', info[1], self.id_dataset) for i in range(info[0])]
+
+            self.jobs_list[self.nb_jobs] = job
+            self.id_dataset +=1
+            self.nb_jobs +=1
+
+            job_list.append((i,job))
+
+        return job_list
+
     def selectHostsNodes(self):
 
         availabel_nodes = self.getAvailabledNodes()
