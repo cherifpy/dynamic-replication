@@ -138,9 +138,9 @@ class JobInjector:
                     self.running_job[job_id] = job
                     j+=1
                     self.waiting_list.append((job_id, job))
-                self.analyseOnCaseTwoWithOneReplicaWithRandomOrder()
+                self.replicatWithThreeStrategies()
                 
-            self.analyseOnCaseTwoWithOneReplicaWithRandomOrder()
+            self.replicatWithThreeStrategies()
             if len(self.running_job.keys()) == 0:
                 print("========= All jobs executed")
                 break
@@ -341,7 +341,7 @@ class JobInjector:
     def analyseOnCaseTwoWithOneReplicaWithRandomOrder(self):
         delete = []
         added = False
-        jobs_ids = copy.deepcopy(self.running_job.keys())
+        jobs_ids = list(self.running_job.keys())
         while len(jobs_ids) > 0:
             job_id = random.choice(jobs_ids)
             jobs_ids.remove(job_id)
@@ -407,6 +407,105 @@ class JobInjector:
             self.historiques[id] = copy.deepcopy(self.running_job[id])
             del self.running_job[id]
         return True  
+    
+    def replicatWithThreeStrategies(self,):
+        """
+            in this strategies we can adapte the strategies of replicating to avoid having a blocked state
+        """
+
+        delete = []
+        added = False
+        jobs_keys = self.orderJobs()
+        for job_id in jobs_keys:
+            
+            added = False
+            end = True #False
+            job = self.running_job[job_id]
+            z = 0
+            while z < len(job.executing_tasks) and not added:
+                i, task_id = job.executing_tasks[z]
+                task = job.tasks_list[i]
+
+                if task.state != "Finished": end = False
+                if  task.state == "Started" and task.starting_time + task.execution_time < time.time():
+                    #end = False
+                    print(f"========= task on job {job_id} finished")
+                    self.writeOutput(f"Task {task.task_id} on job {job_id} finished")
+                    task.state = "Finished"
+                    #t_time = transfertTime(BANDWIDTH, self.graphe_infos[self.id][task.host_node], job.size_dataset)
+                    self.wrtieStatsOnTasks(f"{job_id},{task.task_id},{task.host_node},{task.starting_time},{task.execution_time + task.starting_time},{task.execution_time},{task.id_dataset},{job.transfert_time}")
+                    if job.nb_task_not_lunched > 0: #arrived here
+                        for n_task in job.tasks_list:
+                            if n_task.state == "NotStarted":
+                                new_task = n_task
+                                break
+                        rep, latency = self.sendTaskToNode(task.host_node,job_id,new_task.execution_time,job.id_dataset)
+                        if rep["started"]:
+                            job.executing_tasks.append((len(job.executing_tasks),new_task.task_id))
+                            job.nb_task_not_lunched -=1
+                            new_task.starting_time = rep['starting_time']
+                            new_task.state = "Started"
+                            new_task.host_node = task.host_node
+                            print(f"========= new task on job {job_id} started at node {task.host_node}")
+                            self.writeOutput(f"Task {new_task.task_id} of job {job_id} started on node {task.host_node}")
+                            self.running_tasks.append((job_id, new_task.task_id, new_task.starting_time, new_task.execution_time, new_task.host_node))
+                            print(job.executing_tasks)
+                        else:
+                            print("didn't start")
+                    else:
+
+                        job.ids_nodes.remove(task.host_node)
+                        
+                        #end = True
+                #t_time = transfertTime(BANDWIDTH, self.graphe_infos[self.id][task.host_node], job.size_dataset)       
+                if task.state == "Started" and time.time() - task.starting_time > job.transfert_time and not added and job.nb_task_not_lunched > 0:
+                    end = False
+                    #t_time = transfertTime(BANDWIDTH, self.graphe_infos[self.id][task.host_node], job.size_dataset)
+                    added = self.addNewTaskOnNewNode(job_id,job.transfert_time)
+
+                    if added: 
+                        #pass
+                        job.nb_task_not_lunched -=1
+                        #This change thinks in this cas i only add one replica peer job
+                        print(f'une replica ajouter au job {job_id}')
+                z+=1       
+
+            if end: delete.append(job_id)
+
+        for id in delete :
+            print(f"========= job {id} finished")
+            job = self.running_job[id]
+            job.finishing_time = time.time()
+            self.writeStates(f"{job.id},{job.nb_task},{job.job_starting_time},{job.finishing_time}")
+            self.historiques[id] = copy.deepcopy(self.running_job[id])
+            del self.running_job[id]
+        return True  
+
+    def orderJobs(self):
+        
+        jobs = copy.deepcopy(self.running_job)
+        nb_jobs = len(jobs.keys())
+        nb_availabel_nodes = self.nbAvailabelNodes()
+
+        if nb_availabel_nodes > nb_jobs:
+            return self.running_job.keys()
+        
+        if nb_availabel_nodes < (nb_jobs//2):
+            sorted_keys = sorted(self.running_job.keys(), key=lambda k: self.running_job[k].execution_times)
+            return sorted_keys       
+        
+        return self.running_job.keys()
+
+    def nbAvailabelNodes(self):
+        #Ordonner les keys 
+        nodes = [id for id in range(self.nb_nodes)]
+        for i, job_id in enumerate(self.running_job.keys()):
+            job = self.running_job[job_id]
+            for task in job.tasks_list:
+                if task.state == "Started" and task.host_node in nodes:
+                    nodes.remove(task.host_node)
+        return len(nodes)
+        
     def addNewTaskOnNewNode(self, job_id,t_time):
 
         job = self.running_job[job_id]
@@ -491,7 +590,7 @@ class JobInjector:
             size_dataset=file_size
         )
 
-        job.tasks_list = [Task(f'task_{i}', random.uniform(0.1, 1.5), self.id_dataset) for i in range(nb_tasks)]
+        job.tasks_list = [Task(f'task_{i}', execution_time, self.id_dataset) for i in range(nb_tasks)]
 
         self.jobs_list[self.nb_jobs] = job
         self.id_dataset +=1
@@ -511,6 +610,7 @@ class JobInjector:
             return copy.deepcopy(availabel_nodes)
         else:
             return copy.deepcopy(random.sample(availabel_nodes, NB_REPLICAS_INIT))
+    
     def getAvailabledNodes(self): 
         nodes = [id for id in range(self.nb_nodes)]
         candidates = copy.deepcopy(nodes)
@@ -541,7 +641,7 @@ class JobInjector:
                 if task.state == "Started" and task.host_node in nodes:
                     nodes.remove(task.host_node)
 
-        return None if len(nodes) == 0 else random.sample(nodes,1)[0]                
+        return None if len(nodes) == 0 else random.sample(nodes,1)[0]                  
 
     def replicate(self, host,job_id, id_dataset, ds_size):
 
