@@ -225,6 +225,7 @@ class JobInjector:
                     print(f"========= task on job {job_id} finished")
                     self.writeOutput(f"Task {task.task_id} on job {job_id} finished")
                     task.state = "Finished"
+                    job.execution_time = task.execution_time
                     #t_time = transfertTime(BANDWIDTH, self.graphe_infos[self.id][task.host_node], job.size_dataset)
                     self.wrtieStatsOnTasks(f"{job_id},{task.task_id},{task.host_node},{task.starting_time},{task.execution_time + task.starting_time},{task.execution_time},{task.id_dataset},{job.transfert_time}")
                     if job.nb_task_not_lunched > 0: #arrived here
@@ -292,6 +293,7 @@ class JobInjector:
                     print(f"========= task on job {job_id} finished")
                     self.writeOutput(f"Task {task.task_id} on job {job_id} finished")
                     task.state = "Finished"
+                    job.execution_time = task.execution_time
                     #t_time = transfertTime(BANDWIDTH, self.graphe_infos[self.id][task.host_node], job.size_dataset)
                     self.wrtieStatsOnTasks(f"{job_id},{task.task_id},{task.host_node},{task.starting_time},{task.execution_time + task.starting_time},{task.execution_time},{task.id_dataset},{job.transfert_time}")
                     if job.nb_task_not_lunched > 0: #arrived here
@@ -363,6 +365,7 @@ class JobInjector:
                     print(f"========= task on job {job_id} finished")
                     self.writeOutput(f"Task {task.task_id} on job {job_id} finished")
                     task.state = "Finished"
+                    job.execution_time = task.execution_time
                     #t_time = transfertTime(BANDWIDTH, self.graphe_infos[self.id][task.host_node], job.size_dataset)
                     self.wrtieStatsOnTasks(f"{job_id},{task.task_id},{task.host_node},{task.starting_time},{task.execution_time + task.starting_time},{task.execution_time},{task.id_dataset},{job.transfert_time}")
                     if job.nb_task_not_lunched > 0: #arrived here
@@ -436,6 +439,7 @@ class JobInjector:
                     print(f"========= task on job {job_id} finished")
                     self.writeOutput(f"Task {task.task_id} on job {job_id} finished")
                     task.state = "Finished"
+                    job.execution_time = task.execution_time
                     #t_time = transfertTime(BANDWIDTH, self.graphe_infos[self.id][task.host_node], job.size_dataset)
                     self.wrtieStatsOnTasks(f"{job_id},{task.task_id},{task.host_node},{task.starting_time},{task.execution_time + task.starting_time},{task.execution_time},{task.id_dataset},{job.transfert_time}")
                     if job.nb_task_not_lunched > 0: #arrived here
@@ -496,7 +500,7 @@ class JobInjector:
             return self.running_job.keys()
         
         if nb_availabel_nodes < (nb_jobs//2):
-            sorted_keys = sorted(self.running_job.keys(), key=lambda k: self.running_job[k].execution_times, reverse=True)
+            sorted_keys = sorted(self.running_job.keys(), key=lambda k: self.running_job[k].execution_time, reverse=True)
             return sorted_keys       
         """
         return sorted(self.running_job.keys(), key=lambda k: self.running_job[k].transfert_time)
