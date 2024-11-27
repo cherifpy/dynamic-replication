@@ -2,7 +2,7 @@
 
 class Job:
     nb_job = 0 
-    def __init__(self, nb_task, execution_time, id_dataset, size_dataset):
+    def __init__(self, nb_task, execution_times, id_dataset, size_dataset):
         """
             nb_task
             execution_times

@@ -75,7 +75,7 @@ class JobInjector:
         self.dataset_counter = 0
         self.nb_jobs = 0
         self.id_dataset = 0
-        self.running_job = {}
+        self.running_job: Dict[int, Job] = {}
         self.historiques = {}
         self.running_tasks = []
 
@@ -140,139 +140,24 @@ class JobInjector:
                     self.running_job[job_id] = job
                     j+=1
                     self.waiting_list.append((job_id, job))
-                #self.replicatWithThreeStrategies()
                 
+                #analyse si ya moyen d'ajouter un job
+                to_replicate = self.analyseJobExecution()
+                
+                for id in to_replicate:
+                    small_job = self.running_job[id]
+                    added  = self.addNewTaskOnNewNode(id, small_job)
+                    if added: 
+                        
+                        small_job.nb_task_not_lunched -=1
+                        #This change thinks in this cas i only add one replica peer job
+                        print(f'une replica ajouter au job {job_id}')
+                        
             self.replicatWithThreeStrategies()
             if len(self.running_job.keys()) == 0:
                 print("========= All jobs executed")
                 break
-    
 
-
-
-    def analyseOnCaseOne(self):
-        """
-            Cas 1: we have heterogenose task and dataset with 1 and only replica
-
-        """
-        delete = []
-        for job_id in self.running_job.keys():
-            end = False
-            job = self.running_job[job_id]
-
-            for i, task_id in job.executing_tasks:
-
-                task = job.tasks_list[i]
-                if  task.state == "Started" and task.starting_time + task.execution_time < time.time():
-                    self.writeOutput(f"Task {task.task_id} on job {job_id} finished")
-                    print(f"========= task on job {job_id} finished")
-                    task.is_finished = True
-                    task.state = "Finished"
-                    job.execution_time = task.execution_time
-                    self.wrtieStatsOnTasks(f"{job_id},{task.task_id},{task.host_node},{task.starting_time},{task.execution_time + task.starting_time},{task.execution_time},{task.id_dataset}")
-                    if job.nb_task_not_lunched > 0: #arrived here
-                        end = False
-                        for n_task in job.tasks_list:
-                            if n_task.state != "NotStarted":
-                                new_task = n_task
-                                break
-                        rep, latency = self.sendTaskToNode(task.host_node,job_id,new_task.execution_time,job.id_dataset)
-
-                        if rep["started"]:
-                            job.executing_tasks.append((len(job.executing_tasks),new_task.task_id))
-                            job.nb_task_not_lunched -=1
-                            new_task.starting_time = rep['starting_time']
-                            new_task.executed = True
-                            new_task.state = "Started"
-                            new_task.host_node = task.host_node
-                            print(f"========= new task on job {job_id} started at node {task.host_node}")
-                            self.writeOutput(f"Task {new_task.task_id} of job {job_id} started on node {task.host_node}")
-                            print(job.executing_tasks)
-                        else:
-                            print("didn't start")
-                    else:
-                        job.finishing_time = time.time()
-                        end = True
-                else:
-                    end = False
-
-            if end:
-                delete.append(job_id)
-
-        for id in delete :
-            print(f"========= job {job_id} finished")
-            self.writeOutput(f"Job {id} finished")
-            job = self.running_job[id]
-            self.writeStates(f"{job.id},{job.nb_task},{job.job_starting_time},{job.finishing_time}")
-            self.historiques[id] = copy.deepcopy(self.running_job[id])
-            del self.running_job[id]
-        return True
-    
-    def analyseOnCaseTwo(self):
-        delete = []
-        added = False
-        for job_id in self.running_job.keys():
-            
-            added = False
-            end = True #False
-            job = self.running_job[job_id]
-            for i, task_id in job.executing_tasks:
-                task = job.tasks_list[i]
-
-                if task.state != "Finished": end = False
-                if  task.state == "Started" and task.starting_time + task.execution_time < time.time():
-                    #end = False
-                    print(f"========= task on job {job_id} finished")
-                    self.writeOutput(f"Task {task.task_id} on job {job_id} finished")
-                    task.state = "Finished"
-                    job.execution_time = task.execution_time
-                    #t_time = transfertTime(BANDWIDTH, self.graphe_infos[self.id][task.host_node], job.size_dataset)
-                    self.wrtieStatsOnTasks(f"{job_id},{task.task_id},{task.host_node},{task.starting_time},{task.execution_time + task.starting_time},{task.execution_time},{task.id_dataset},{job.transfert_time}")
-                    if job.nb_task_not_lunched > 0: #arrived here
-                        for n_task in job.tasks_list:
-                            if n_task.state == "NotStarted":
-                                new_task = n_task
-                                break
-                        rep, latency = self.sendTaskToNode(task.host_node,job_id,new_task.execution_time,job.id_dataset)
-                        if rep["started"]:
-                            job.executing_tasks.append((len(job.executing_tasks),new_task.task_id))
-                            job.nb_task_not_lunched -=1
-                            new_task.starting_time = rep['starting_time']
-                            new_task.state = "Started"
-                            new_task.host_node = task.host_node
-                            print(f"========= new task on job {job_id} started at node {task.host_node}")
-                            self.writeOutput(f"Task {new_task.task_id} of job {job_id} started on node {task.host_node}")
-                            self.running_tasks.append((job_id, new_task.task_id, new_task.starting_time, new_task.execution_time, new_task.host_node))
-                            print(job.executing_tasks)
-                        else:
-                            print("didn't start")
-                    else:
-                        job.ids_nodes.remove(task.host_node)
-                        #end = True
-                #t_time = transfertTime(BANDWIDTH, self.graphe_infos[self.id][task.host_node], job.size_dataset)       
-                if task.state == "Started" and time.time() - task.starting_time > job.transfert_time and not added and job.nb_task_not_lunched > 0:
-                    end = False
-                    #t_time = transfertTime(BANDWIDTH, self.graphe_infos[self.id][task.host_node], job.size_dataset)
-                    added = self.addNewTasksOnNewNodes(job_id,job.transfert_time)
-
-                    if added: 
-                        #pass
-                        job.nb_task_not_lunched -=1
-                        #This change thinks in this cas i only add one replica peer job
-                        print(f'une replica ajouter au job {job_id}')
-                        break
-                        
-
-            if end: delete.append(job_id)
-
-        for id in delete :
-            print(f"========= job {id} finished")
-            job = self.running_job[id]
-            job.finishing_time = time.time()
-            self.writeStates(f"{job.id},{job.nb_task},{job.job_starting_time},{job.finishing_time}")
-            self.historiques[id] = copy.deepcopy(self.running_job[id])
-            del self.running_job[id]
-        return True
     
     def analyseOnCaseTwoWithOneReplica(self):
         delete = []
@@ -550,6 +435,26 @@ class JobInjector:
                     return True
                 
         return False
+    
+    def analyseJobExecution(self): 
+        ignored_job = []
+
+        for job_id in self.running_job.keys():
+            job = self.running_job[job_id]
+            if job.execution_time != float('inf') and job.execution_time < job.transfert_time:
+                ignored_job.append(job_id)
+        
+        to_replicate = []
+        for job_id in self.running_job.keys():
+            for ignored_job_id in self.running_job.keys():
+                if ignored_job_id != job_id:
+                    job = self.running_job[job_id]
+                    ignored_job = self.running_job[ignored_job_id]
+
+                    if job.execution_time != float('inf') and ignored_job.transfert_time + ignored_job.execution_time < job.execution_time:
+                        to_replicate.append()
+        return to_replicate
+
     def addNewTasksOnNewNodes(self, job_id,t_time):
 
         job = self.running_job[job_id]
@@ -596,7 +501,7 @@ class JobInjector:
 
         job = Job(
             nb_task=nb_tasks,
-            execution_times=execution_time,
+            execution_time=execution_time,
             id_dataset=self.id_dataset,
             size_dataset=file_size
         )
@@ -627,7 +532,7 @@ class JobInjector:
         for i, info in enumerate(infos):
             job = Job(
                 nb_task=info[0],
-                execution_times=info[1],
+                execution_time=info[1],
                 id_dataset=info[2],
                 size_dataset=info[3]
             )
