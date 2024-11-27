@@ -140,7 +140,7 @@ class JobInjector:
                     self.running_job[job_id] = job
                     j+=1
                     self.waiting_list.append((job_id, job))
-                self.replicatWithThreeStrategies()
+                #self.replicatWithThreeStrategies()
                 
             self.replicatWithThreeStrategies()
             if len(self.running_job.keys()) == 0:
@@ -168,6 +168,7 @@ class JobInjector:
                     print(f"========= task on job {job_id} finished")
                     task.is_finished = True
                     task.state = "Finished"
+                    job.execution_time = task.execution_time
                     self.wrtieStatsOnTasks(f"{job_id},{task.task_id},{task.host_node},{task.starting_time},{task.execution_time + task.starting_time},{task.execution_time},{task.id_dataset}")
                     if job.nb_task_not_lunched > 0: #arrived here
                         end = False
@@ -807,7 +808,9 @@ if __name__ == "__main__":
        [100., 100., 100., 100., 100., 100., 100.,  -1., 100., 100., 100.],
        [100., 100., 100., 100., 100., 100., 100., 100.,  -1., 100., 100.],
        [100., 100., 100., 100., 100., 100., 100., 100., 100.,  -1., 100.],
-       [100., 100., 100., 100., 100., 100., 100., 100., 100., 100.,  -1.]], 'IPs_ADDRESS': ['172.16.101.10', '172.16.101.14', '172.16.101.17', '172.16.101.21', '172.16.101.32', '172.16.101.4', '172.16.101.5', '172.16.101.6', '172.16.101.7', '172.16.101.8'], 'infos': {0: {'latency': 100.0, 'id': 0, 'node_ip': '172.16.101.10', 'node_port': 8880}, 1: {'latency': 100.0, 'id': 1, 'node_ip': '172.16.101.14', 'node_port': 8881}, 2: {'latency': 100.0, 'id': 2, 'node_ip': '172.16.101.17', 'node_port': 8882}, 3: {'latency': 100.0, 'id': 3, 'node_ip': '172.16.101.21', 'node_port': 8883}, 4: {'latency': 100.0, 'id': 4, 'node_ip': '172.16.101.32', 'node_port': 8884}, 5: {'latency': 100.0, 'id': 5, 'node_ip': '172.16.101.4', 'node_port': 8885}, 6: {'latency': 100.0, 'id': 6, 'node_ip': '172.16.101.5', 'node_port': 8886}, 7: {'latency': 100.0, 'id': 7, 'node_ip': '172.16.101.6', 'node_port': 8887}, 8: {'latency': 100.0, 'id': 8, 'node_ip': '172.16.101.7', 'node_port': 8888}, 9: {'latency': 100.0, 'id': 9, 'node_ip': '172.16.101.8', 'node_port': 8889}}}
+       [100., 100., 100., 100., 100., 100., 100., 100., 100., 100.,  -1.]], 'IPs_ADDRESS': ['172.16.101.14', '172.16.101.17', '172.16.101.21', '172.16.101.31', '172.16.101.32', '172.16.101.4', '172.16.101.5', '172.16.101.6', '172.16.101.7', '172.16.101.8'], 'infos': {0: {'latency': 100.0, 'id': 0, 'node_ip': '172.16.101.14', 'node_port': 8880}, 1: {'latency': 100.0, 'id': 1, 'node_ip': '172.16.101.17', 'node_port': 8881}, 2: {'latency': 100.0, 'id': 2, 'node_ip': '172.16.101.21', 'node_port': 8882}, 3: {'latency': 100.0, 'id': 3, 'node_ip': '172.16.101.31', 'node_port': 8883}, 4: {'latency': 100.0, 'id': 4, 'node_ip': '172.16.101.32', 'node_port': 8884}, 5: {'latency': 100.0, 'id': 5, 'node_ip': '172.16.101.4', 'node_port': 8885}, 6: {'latency': 100.0, 'id': 6, 'node_ip': '172.16.101.5', 'node_port': 8886}, 7: {'latency': 100.0, 'id': 7, 'node_ip': '172.16.101.6', 'node_port': 8887}, 8: {'latency': 100.0, 'id': 8, 'node_ip': '172.16.101.7', 'node_port': 8888}, 9: {'latency': 100.0, 'id': 9, 'node_ip': '172.16.101.8', 'node_port': 8889}}}
+
+
     
     job_injector = JobInjector(
         nb_nodes = NB_NODES,

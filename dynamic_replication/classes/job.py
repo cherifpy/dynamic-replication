@@ -11,7 +11,7 @@ class Job:
         """
         self.id = Job.nb_job
         self.nb_task = nb_task
-        self.execution_times = execution_times
+        self.execution_times = float('inf')
         self.id_dataset = id_dataset
         self.size_dataset = size_dataset 
         self.nb_task_not_lunched = nb_task
