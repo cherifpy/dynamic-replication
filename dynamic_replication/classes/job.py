@@ -23,7 +23,7 @@ class Job:
         self.finishing_time = 0
         self.executing_tasks = []
         self.finished_tasks = []
-        self.transfert_time = []
+        self.transfert_time = float('inf')
         self.nb_replicas = 0
         Job.nb_job +=1
 

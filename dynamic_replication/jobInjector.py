@@ -488,7 +488,7 @@ class JobInjector:
     def orderJobs(self):
         
         jobs = copy.deepcopy(self.running_job)
-        nb_jobs = len(jobs.keys())
+        """nb_jobs = len(jobs.keys())
         nb_availabel_nodes = self.nbAvailabelNodes()
 
         if nb_availabel_nodes > nb_jobs:
@@ -497,6 +497,8 @@ class JobInjector:
         if nb_availabel_nodes < (nb_jobs//2):
             sorted_keys = sorted(self.running_job.keys(), key=lambda k: self.running_job[k].execution_times, reverse=True)
             return sorted_keys       
+        """
+        return sorted(self.running_job.keys(), key=lambda k: self.running_job[k].transfert_time)
         
         return self.running_job.keys()
 
@@ -610,7 +612,7 @@ class JobInjector:
     
     def staticJobs(self,):
         infos = [
-            (5,0.5, 0,4120),
+            (5,0.3, 0,4120),
             (3,1, 1,3048),
             (4,0.2, 2,1024),
             (5,0.6, 3,2504),
@@ -632,6 +634,36 @@ class JobInjector:
             self.nb_jobs +=1
 
             job_list.append((i,job))
+
+        return job_list
+
+    def staticJobsFromJSON(self):
+        # Load the JSON file
+        df = pd.read_json("fExps/jobs.json", lines=True)
+        job_list = []
+
+        # Process each job in the DataFrame
+        for _, info in df.iterrows():
+            job = Job(
+                nb_task=info["nb_tasks"],
+                execution_times=info["time"],
+                id_dataset=info["id_dataset"],
+                size_dataset=info["dataset_size"]
+            )
+
+            # Generate the list of tasks for this job
+            job.tasks_list = [
+                Task(f'task_{i}', info["time"], info["id_dataset"])
+                for i in range(info["nb_tasks"])
+            ]
+
+            # Store the job in the jobs_list and increment counters
+            self.jobs_list[self.nb_jobs] = job
+            self.id_dataset += 1
+            self.nb_jobs += 1
+
+            # Append to job_list for returning
+            job_list.append((self.nb_jobs - 1, job))
 
         return job_list
 
