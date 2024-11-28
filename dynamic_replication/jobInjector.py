@@ -551,13 +551,13 @@ class JobInjector:
 
     def staticJobsFromJSON(self):
         # Load the JSON file
-        df = pd.read_json(f"configurations/jobs.json", lines=True)
+        df = pd.read_json("./jobs.json", lines=True)
         job_list = []
 
         # Process each job in the DataFrame
         for _, info in df.iterrows():
             job = Job(
-                nb_task=info["nb_tasks"],
+                nb_task=int(info["nb_tasks"]),
                 execution_times=info["time"],
                 id_dataset=info["id_dataset"],
                 size_dataset=info["dataset_size"]
@@ -566,7 +566,7 @@ class JobInjector:
             # Generate the list of tasks for this job
             job.tasks_list = [
                 Task(f'task_{i}', info["time"], info["id_dataset"])
-                for i in range(info["nb_tasks"])
+                for i in range(int(info["nb_tasks"]))
             ]
 
             # Store the job in the jobs_list and increment counters
@@ -709,7 +709,7 @@ class JobInjector:
         
 if __name__ == "__main__":
 
-    data = {'IP_ADDRESS': '172.16.101.9', 'graphe_infos': [[ -1., 100., 100., 100., 100., 100., 100., 100., 100., 100., 100.],
+    data = {'IP_ADDRESS': '172.16.193.8', 'graphe_infos': [[ -1., 100., 100., 100., 100., 100., 100., 100., 100., 100., 100.],
        [100.,  -1., 100., 100., 100., 100., 100., 100., 100., 100., 100.],
        [100., 100.,  -1., 100., 100., 100., 100., 100., 100., 100., 100.],
        [100., 100., 100.,  -1., 100., 100., 100., 100., 100., 100., 100.],
@@ -719,8 +719,9 @@ if __name__ == "__main__":
        [100., 100., 100., 100., 100., 100., 100.,  -1., 100., 100., 100.],
        [100., 100., 100., 100., 100., 100., 100., 100.,  -1., 100., 100.],
        [100., 100., 100., 100., 100., 100., 100., 100., 100.,  -1., 100.],
-       [100., 100., 100., 100., 100., 100., 100., 100., 100., 100.,  -1.]], 'IPs_ADDRESS': ['172.16.101.14', '172.16.101.3', '172.16.101.30', '172.16.101.31', '172.16.101.32', '172.16.101.4', '172.16.101.5', '172.16.101.6', '172.16.101.7', '172.16.101.8'], 'infos': {0: {'latency': 100.0, 'id': 0, 'node_ip': '172.16.101.14', 'node_port': 8880}, 1: {'latency': 100.0, 'id': 1, 'node_ip': '172.16.101.3', 'node_port': 8881}, 2: {'latency': 100.0, 'id': 2, 'node_ip': '172.16.101.30', 'node_port': 8882}, 3: {'latency': 100.0, 'id': 3, 'node_ip': '172.16.101.31', 'node_port': 8883}, 4: {'latency': 100.0, 'id': 4, 'node_ip': '172.16.101.32', 'node_port': 8884}, 5: {'latency': 100.0, 'id': 5, 'node_ip': '172.16.101.4', 'node_port': 8885}, 6: {'latency': 100.0, 'id': 6, 'node_ip': '172.16.101.5', 'node_port': 8886}, 7: {'latency': 100.0, 'id': 7, 'node_ip': '172.16.101.6', 'node_port': 8887}, 8: {'latency': 100.0, 'id': 8, 'node_ip': '172.16.101.7', 'node_port': 8888}, 9: {'latency': 100.0, 'id': 9, 'node_ip': '172.16.101.8', 'node_port': 8889}}}
-    
+       [100., 100., 100., 100., 100., 100., 100., 100., 100., 100.,  -1.]], 'IPs_ADDRESS': ['172.16.193.23', '172.16.193.31', '172.16.193.34', '172.16.193.35', '172.16.193.36', '172.16.193.40', '172.16.193.42', '172.16.193.46', '172.16.193.48', '172.16.193.7'], 'infos': {0: {'latency': 100.0, 'id': 0, 'node_ip': '172.16.193.23', 'node_port': 8880}, 1: {'latency': 100.0, 'id': 1, 'node_ip': '172.16.193.31', 'node_port': 8881}, 2: {'latency': 100.0, 'id': 2, 'node_ip': '172.16.193.34', 'node_port': 8882}, 3: {'latency': 100.0, 'id': 3, 'node_ip': '172.16.193.35', 'node_port': 8883}, 4: {'latency': 100.0, 'id': 4, 'node_ip': '172.16.193.36', 'node_port': 8884}, 5: {'latency': 100.0, 'id': 5, 'node_ip': '172.16.193.40', 'node_port': 8885}, 6: {'latency': 100.0, 'id': 6, 'node_ip': '172.16.193.42', 'node_port': 8886}, 7: {'latency': 100.0, 'id': 7, 'node_ip': '172.16.193.46', 'node_port': 8887}, 8: {'latency': 100.0, 'id': 8, 'node_ip': '172.16.193.48', 'node_port': 8888}, 9: {'latency': 100.0, 'id': 9, 'node_ip': '172.16.193.7', 'node_port': 8889}}}
+
+
     job_injector = JobInjector(
         nb_nodes = NB_NODES,
         graphe= data["graphe_infos"],
@@ -731,4 +732,9 @@ if __name__ == "__main__":
     
     
     job_injector.nodes_infos = data["infos"]
-    job_injector.start()
+    #job_injector.start()
+
+    print(job_injector.staticJobsFromJSON())
+
+
+
