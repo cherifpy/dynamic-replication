@@ -53,7 +53,7 @@ class JobInjector:
         
         str = "/tmp/temps_execution.txt"
         self.stats = open(str,'w')#self.writeStates(f"{job.id},{job.nb_task},{job.job_starting_time},{job.finishing_time}")
-        self.stats.write('job_id,nb_tasks, starting_time,finishing_time\n')
+        self.stats.write('job_id,nb_tasks,task_execution_time, starting_time,finishing_time\n')
         self.stats.close()
 
         self.stats_on_task = open("/tmp/stats_on_tasks.txt",'w')
@@ -140,7 +140,7 @@ class JobInjector:
                     self.running_job[job_id] = job
                     j+=1
                     self.waiting_list.append((job_id, job))
-                
+                self.replicatWithThreeStrategies()
             #analyse si ya moyen d'ajouter un job
             """to_replicate = self.analyseJobExecution()
             
@@ -223,7 +223,7 @@ class JobInjector:
             print(f"========= job {id} finished")
             job = self.running_job[id]
             job.finishing_time = time.time()
-            self.writeStates(f"{job.id},{job.nb_task},{job.job_starting_time},{job.finishing_time}")
+            self.writeStates(f"{job.id},{job.nb_task},{job.execution_time},{job.job_starting_time},{job.finishing_time}")
             self.historiques[id] = copy.deepcopy(self.running_job[id])
             del self.running_job[id]
         return True  
@@ -388,7 +388,7 @@ class JobInjector:
             sorted_keys = sorted(self.running_job.keys(), key=lambda k: self.running_job[k].execution_time, reverse=True)
             return sorted_keys       
         """
-        return sorted(self.running_job.keys(), key=lambda k: self.running_job[k].execution_time)
+        return sorted(self.running_job.keys(), key=lambda k: self.running_job[k].execution_time, reverse=True)
         
         return self.running_job.keys()
 
@@ -589,14 +589,13 @@ class JobInjector:
     
     def getAvailabledNodes(self): 
         nodes = [id for id in range(self.nb_nodes)]
-        candidates = copy.deepcopy(nodes)
         for i, job_id in enumerate(self.running_job.keys()):
             job = self.running_job[job_id]
-            for node in nodes:
-                if node in job.ids_nodes:
-                    candidates.remove(node)
-                
-        return [] if len(candidates) == 0 else candidates
+            for task in job.tasks_list:
+                if task.state == "Started" and task.host_node in nodes:
+                    nodes.remove(task.host_node)
+
+        return nodes 
     
     def getAvailabelNodeForReplicating(self):
         nodes = [id for id in range(self.nb_nodes)]
@@ -618,6 +617,16 @@ class JobInjector:
                     nodes.remove(task.host_node)
 
         return None if len(nodes) == 0 else random.sample(nodes,1)[0]                  
+    
+    def getAvailabelNodes(self):
+        nodes = [id for id in range(self.nb_nodes)]
+        for i, job_id in enumerate(self.running_job.keys()):
+            job = self.running_job[job_id]
+            for task in job.tasks_list:
+                if task.state == "Started" and task.host_node in nodes:
+                    nodes.remove(task.host_node)
+
+        return nodes 
 
     def replicate(self, host,job_id, id_dataset, ds_size):
 
