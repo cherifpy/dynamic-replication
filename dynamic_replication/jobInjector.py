@@ -89,7 +89,7 @@ class JobInjector:
 
         job_id, job = self.generateJob()
         self.waiting_list.append((job_id,job))"""
-        job_list = self.staticJobs()
+        job_list = self.staticJobsFromJSON()
         j = 0
         while True:
             while j < len(job_list):
@@ -142,7 +142,7 @@ class JobInjector:
                     self.waiting_list.append((job_id, job))
                 
             #analyse si ya moyen d'ajouter un job
-            to_replicate = self.analyseJobExecution()
+            """to_replicate = self.analyseJobExecution()
             
             for id_ in to_replicate:
                 small_job = self.running_job[id_]
@@ -152,7 +152,7 @@ class JobInjector:
                     self.running_job[id_].nb_task_not_lunched -=1
                     #This change thinks in this cas i only add one replica peer job
                     print(f'une replica ajouter au job {id_}')
-                        
+            """            
             self.replicatWithThreeStrategies()
             if len(self.running_job.keys()) == 0:
                 print("========= All jobs executed")
@@ -388,7 +388,7 @@ class JobInjector:
             sorted_keys = sorted(self.running_job.keys(), key=lambda k: self.running_job[k].execution_time, reverse=True)
             return sorted_keys       
         """
-        return sorted(self.running_job.keys(), key=lambda k: self.running_job[k].transfert_time)
+        return sorted(self.running_job.keys(), key=lambda k: self.running_job[k].execution_time)
         
         return self.running_job.keys()
 
@@ -437,16 +437,16 @@ class JobInjector:
         return False
     
     def analyseJobExecution(self): 
-        ignored_job = []
+        ignored_job_list = []
         
         for job_id in self.running_job.keys():
             job = self.running_job[job_id]
-            if job.executing_time  != float('inf') and job.execution_time < job.transfert_time and job.nb_task_not_lunched > 0:
-                ignored_job.append(job_id)
+            if job.execution_time  != float('inf') and job.execution_time < job.transfert_time and job.nb_task_not_lunched > 0:
+                ignored_job_list.append(job_id)
         
         to_replicate = []
         for job_id in self.running_job.keys():
-            for ignored_job_id in ignored_job:
+            for ignored_job_id in ignored_job_list:
                 if ignored_job_id != job_id:
                     job = self.running_job[job_id]
                     ignored_job = self.running_job[ignored_job_id]
@@ -454,7 +454,7 @@ class JobInjector:
                     if job.transfert_time != float('inf') and ignored_job.transfert_time + ignored_job.execution_time < job.transfert_time:
                         to_replicate.append(ignored_job_id)
 
-        print(f'"""""""""""""""""" {to_replicate}""""""""""""""""')
+        #print(f'"""""""""""""""""" {to_replicate}""""""""""""""""')
         return to_replicate
 
     def addNewTasksOnNewNodes(self, job_id,t_time):
@@ -551,7 +551,7 @@ class JobInjector:
 
     def staticJobsFromJSON(self):
         # Load the JSON file
-        df = pd.read_json("fExps/jobs.json", lines=True)
+        df = pd.read_json(f"configurations/jobs.json", lines=True)
         job_list = []
 
         # Process each job in the DataFrame
