@@ -141,17 +141,17 @@ class JobInjector:
                     j+=1
                     self.waiting_list.append((job_id, job))
                 
-                #analyse si ya moyen d'ajouter un job
-                to_replicate = self.analyseJobExecution()
-                
-                for id in to_replicate:
-                    small_job = self.running_job[id]
-                    added  = self.addNewTaskOnNewNode(id, small_job)
-                    if added: 
-                        
-                        small_job.nb_task_not_lunched -=1
-                        #This change thinks in this cas i only add one replica peer job
-                        print(f'une replica ajouter au job {job_id}')
+            #analyse si ya moyen d'ajouter un job
+            to_replicate = self.analyseJobExecution()
+            
+            for id_ in to_replicate:
+                small_job = self.running_job[id_]
+                added  = self.addNewTaskOnNewNode(id_, small_job.transfert_time)
+                if added: 
+                    small_job.nb_replicas +=1
+                    self.running_job[id_].nb_task_not_lunched -=1
+                    #This change thinks in this cas i only add one replica peer job
+                    print(f'une replica ajouter au job {id_}')
                         
             self.replicatWithThreeStrategies()
             if len(self.running_job.keys()) == 0:
@@ -438,27 +438,29 @@ class JobInjector:
     
     def analyseJobExecution(self): 
         ignored_job = []
-
+        
         for job_id in self.running_job.keys():
             job = self.running_job[job_id]
-            if job.execution_time != float('inf') and job.execution_time < job.transfert_time:
+            if job.executing_time  != float('inf') and job.execution_time < job.transfert_time and job.nb_task_not_lunched > 0:
                 ignored_job.append(job_id)
         
         to_replicate = []
         for job_id in self.running_job.keys():
-            for ignored_job_id in self.running_job.keys():
+            for ignored_job_id in ignored_job:
                 if ignored_job_id != job_id:
                     job = self.running_job[job_id]
                     ignored_job = self.running_job[ignored_job_id]
 
-                    if job.execution_time != float('inf') and ignored_job.transfert_time + ignored_job.execution_time < job.execution_time:
-                        to_replicate.append()
+                    if job.transfert_time != float('inf') and ignored_job.transfert_time + ignored_job.execution_time < job.transfert_time:
+                        to_replicate.append(ignored_job_id)
+
+        print(f'"""""""""""""""""" {to_replicate}""""""""""""""""')
         return to_replicate
 
     def addNewTasksOnNewNodes(self, job_id,t_time):
 
         job = self.running_job[job_id]
-        if job.nb_task_not_lunched == 0:
+        if job.nb_task_not_lunched == 0:  
             return False
         id_node = self.getAvailabelNodeV2()
         while id_node is not None :
@@ -501,7 +503,7 @@ class JobInjector:
 
         job = Job(
             nb_task=nb_tasks,
-            execution_time=execution_time,
+            execution_times=execution_time,
             id_dataset=self.id_dataset,
             size_dataset=file_size
         )
@@ -532,7 +534,7 @@ class JobInjector:
         for i, info in enumerate(infos):
             job = Job(
                 nb_task=info[0],
-                execution_time=info[1],
+                execution_times=info[1],
                 id_dataset=info[2],
                 size_dataset=info[3]
             )
@@ -717,9 +719,7 @@ if __name__ == "__main__":
        [100., 100., 100., 100., 100., 100., 100.,  -1., 100., 100., 100.],
        [100., 100., 100., 100., 100., 100., 100., 100.,  -1., 100., 100.],
        [100., 100., 100., 100., 100., 100., 100., 100., 100.,  -1., 100.],
-       [100., 100., 100., 100., 100., 100., 100., 100., 100., 100.,  -1.]], 'IPs_ADDRESS': ['172.16.101.14', '172.16.101.17', '172.16.101.21', '172.16.101.31', '172.16.101.32', '172.16.101.4', '172.16.101.5', '172.16.101.6', '172.16.101.7', '172.16.101.8'], 'infos': {0: {'latency': 100.0, 'id': 0, 'node_ip': '172.16.101.14', 'node_port': 8880}, 1: {'latency': 100.0, 'id': 1, 'node_ip': '172.16.101.17', 'node_port': 8881}, 2: {'latency': 100.0, 'id': 2, 'node_ip': '172.16.101.21', 'node_port': 8882}, 3: {'latency': 100.0, 'id': 3, 'node_ip': '172.16.101.31', 'node_port': 8883}, 4: {'latency': 100.0, 'id': 4, 'node_ip': '172.16.101.32', 'node_port': 8884}, 5: {'latency': 100.0, 'id': 5, 'node_ip': '172.16.101.4', 'node_port': 8885}, 6: {'latency': 100.0, 'id': 6, 'node_ip': '172.16.101.5', 'node_port': 8886}, 7: {'latency': 100.0, 'id': 7, 'node_ip': '172.16.101.6', 'node_port': 8887}, 8: {'latency': 100.0, 'id': 8, 'node_ip': '172.16.101.7', 'node_port': 8888}, 9: {'latency': 100.0, 'id': 9, 'node_ip': '172.16.101.8', 'node_port': 8889}}}
-
-
+       [100., 100., 100., 100., 100., 100., 100., 100., 100., 100.,  -1.]], 'IPs_ADDRESS': ['172.16.101.14', '172.16.101.3', '172.16.101.30', '172.16.101.31', '172.16.101.32', '172.16.101.4', '172.16.101.5', '172.16.101.6', '172.16.101.7', '172.16.101.8'], 'infos': {0: {'latency': 100.0, 'id': 0, 'node_ip': '172.16.101.14', 'node_port': 8880}, 1: {'latency': 100.0, 'id': 1, 'node_ip': '172.16.101.3', 'node_port': 8881}, 2: {'latency': 100.0, 'id': 2, 'node_ip': '172.16.101.30', 'node_port': 8882}, 3: {'latency': 100.0, 'id': 3, 'node_ip': '172.16.101.31', 'node_port': 8883}, 4: {'latency': 100.0, 'id': 4, 'node_ip': '172.16.101.32', 'node_port': 8884}, 5: {'latency': 100.0, 'id': 5, 'node_ip': '172.16.101.4', 'node_port': 8885}, 6: {'latency': 100.0, 'id': 6, 'node_ip': '172.16.101.5', 'node_port': 8886}, 7: {'latency': 100.0, 'id': 7, 'node_ip': '172.16.101.6', 'node_port': 8887}, 8: {'latency': 100.0, 'id': 8, 'node_ip': '172.16.101.7', 'node_port': 8888}, 9: {'latency': 100.0, 'id': 9, 'node_ip': '172.16.101.8', 'node_port': 8889}}}
     
     job_injector = JobInjector(
         nb_nodes = NB_NODES,
