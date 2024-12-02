@@ -391,7 +391,7 @@ class JobInjector:
             sorted_keys = sorted(self.running_job.keys(), key=lambda k: self.running_job[k].execution_time, reverse=True)
             return sorted_keys       
         """
-        return sorted(self.running_job.keys(), key=lambda k: self.running_job[k].execution_time*self.running_job[k].nb_task, reverse=True)
+        return sorted(self.running_job.keys(), key=lambda k: self.running_job[k].execution_time*self.running_job[k].nb_task, reverse=False)
         
         return self.running_job.keys()
 
@@ -722,7 +722,7 @@ class JobInjector:
         
 if __name__ == "__main__":
 
-    data = {'IP_ADDRESS': '172.16.193.7', 'graphe_infos': [[ -1., 100., 100., 100., 100., 100., 100., 100., 100., 100., 100.],
+    data = {'IP_ADDRESS': '172.16.193.6', 'graphe_infos': [[ -1., 100., 100., 100., 100., 100., 100., 100., 100., 100., 100.],
        [100.,  -1., 100., 100., 100., 100., 100., 100., 100., 100., 100.],
        [100., 100.,  -1., 100., 100., 100., 100., 100., 100., 100., 100.],
        [100., 100., 100.,  -1., 100., 100., 100., 100., 100., 100., 100.],
@@ -732,9 +732,8 @@ if __name__ == "__main__":
        [100., 100., 100., 100., 100., 100., 100.,  -1., 100., 100., 100.],
        [100., 100., 100., 100., 100., 100., 100., 100.,  -1., 100., 100.],
        [100., 100., 100., 100., 100., 100., 100., 100., 100.,  -1., 100.],
-       [100., 100., 100., 100., 100., 100., 100., 100., 100., 100.,  -1.]], 'IPs_ADDRESS': ['172.16.193.11', '172.16.193.20', '172.16.193.23', '172.16.193.31', '172.16.193.34', '172.16.193.35', '172.16.193.36', '172.16.193.42', '172.16.193.46', '172.16.193.48'], 'infos': {0: {'latency': 100.0, 'id': 0, 'node_ip': '172.16.193.11', 'node_port': 8880}, 1: {'latency': 100.0, 'id': 1, 'node_ip': '172.16.193.20', 'node_port': 8881}, 2: {'latency': 100.0, 'id': 2, 'node_ip': '172.16.193.23', 'node_port': 8882}, 3: {'latency': 100.0, 'id': 3, 'node_ip': '172.16.193.31', 'node_port': 8883}, 4: {'latency': 100.0, 'id': 4, 'node_ip': '172.16.193.34', 'node_port': 8884}, 5: {'latency': 100.0, 'id': 5, 'node_ip': '172.16.193.35', 'node_port': 8885}, 6: {'latency': 100.0, 'id': 6, 'node_ip': '172.16.193.36', 'node_port': 8886}, 7: {'latency': 100.0, 'id': 7, 'node_ip': '172.16.193.42', 'node_port': 8887}, 8: {'latency': 100.0, 'id': 8, 'node_ip': '172.16.193.46', 'node_port': 8888}, 9: {'latency': 100.0, 'id': 9, 'node_ip': '172.16.193.48', 'node_port': 8889}}}
-
-
+       [100., 100., 100., 100., 100., 100., 100., 100., 100., 100.,  -1.]], 'IPs_ADDRESS': ['172.16.193.2', '172.16.193.21', '172.16.193.23', '172.16.193.24', '172.16.193.31', '172.16.193.33', '172.16.193.34', '172.16.193.35', '172.16.193.43', '172.16.193.48'], 'infos': {0: {'latency': 100.0, 'id': 0, 'node_ip': '172.16.193.2', 'node_port': 8880}, 1: {'latency': 100.0, 'id': 1, 'node_ip': '172.16.193.21', 'node_port': 8881}, 2: {'latency': 100.0, 'id': 2, 'node_ip': '172.16.193.23', 'node_port': 8882}, 3: {'latency': 100.0, 'id': 3, 'node_ip': '172.16.193.24', 'node_port': 8883}, 4: {'latency': 100.0, 'id': 4, 'node_ip': '172.16.193.31', 'node_port': 8884}, 5: {'latency': 100.0, 'id': 5, 'node_ip': '172.16.193.33', 'node_port': 8885}, 6: {'latency': 100.0, 'id': 6, 'node_ip': '172.16.193.34', 'node_port': 8886}, 7: {'latency': 100.0, 'id': 7, 'node_ip': '172.16.193.35', 'node_port': 8887}, 8: {'latency': 100.0, 'id': 8, 'node_ip': '172.16.193.43', 'node_port': 8888}, 9: {'latency': 100.0, 'id': 9, 'node_ip': '172.16.193.48', 'node_port': 8889}}}
+    
     job_injector = JobInjector(
         nb_nodes = NB_NODES,
         graphe= data["graphe_infos"],
