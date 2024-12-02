@@ -89,7 +89,7 @@ class JobInjector:
 
         job_id, job = self.generateJob()
         self.waiting_list.append((job_id,job))"""
-        job_list = self.staticJobs()#self.staticJobsFromJSON()
+        job_list = self.staticJobsFromJSON()#self.staticJobs()#
         j = 0
         while True:
             while j < len(job_list):
@@ -551,7 +551,7 @@ class JobInjector:
 
     def staticJobsFromJSON(self):
         # Load the JSON file
-        df = pd.read_json("./jobs.json", lines=True)
+        df = pd.read_json("/home/csimohammed/code/dynamic_replication/jobs.json", lines=True)
         job_list = []
 
         # Process each job in the DataFrame
@@ -585,7 +585,8 @@ class JobInjector:
         if len(availabel_nodes) < NB_REPLICAS_INIT:
             return copy.deepcopy(availabel_nodes)
         else:
-            return copy.deepcopy(random.sample(availabel_nodes, NB_REPLICAS_INIT))
+            print(availabel_nodes)
+            return copy.deepcopy([random.choice(availabel_nodes)]) if NB_REPLICAS_INIT == 1 else copy.deepcopy(random.sample(availabel_nodes, NB_REPLICAS_INIT))
     
     def getAvailabledNodes(self): 
         nodes = [id for id in range(self.nb_nodes)]
@@ -616,7 +617,7 @@ class JobInjector:
                 if task.state == "Started" and task.host_node in nodes:
                     nodes.remove(task.host_node)
 
-        return None if len(nodes) == 0 else random.sample(nodes,1)[0]                  
+        return None if len(nodes) == 0 else copy.deepcopy([random.choice(nodes)])                 
     
     def getAvailabelNodes(self):
         nodes = [id for id in range(self.nb_nodes)]
@@ -744,6 +745,7 @@ if __name__ == "__main__":
     job_injector.start()
 
     #print(job_injector.staticJobsFromJSON())
+
 
 
 
