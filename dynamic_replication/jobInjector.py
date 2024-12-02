@@ -118,9 +118,10 @@ class JobInjector:
                         print("no replica sended")
 
                 for i,host in enumerate(host_with_replica):
-                    
+                    job.job_starting_time = time.time()
                     rep, latency = self.sendTaskToNode(host, job_id, job.tasks_list[i].execution_time,job.id_dataset)
                     if rep['started']:
+                        
                         self.writeOutput(f"Job {job_id} started")
                         self.writeOutput(f"Task {i} of job {job_id} started on node {host}")
                         print("========= Job started")
@@ -135,7 +136,7 @@ class JobInjector:
                         job_started = True
                         job.starting_times.append(rep['starting_time'])
                         job.nb_task_not_lunched -=1
-                        job.job_starting_time = time.time()
+                        
                 if job_started:
                     self.running_job[job_id] = job
                     j+=1
@@ -289,13 +290,15 @@ class JobInjector:
                         print(f'une replica ajouter au job {job_id}')
                 z+=1       
 
-            if end: delete.append(job_id)
+            if end: 
+                job.finishing_time = time.time()
+                delete.append(job_id)
 
         for id in delete :
             print(f"========= job {id} finished")
             job = self.running_job[id]
-            job.finishing_time = time.time()
-            self.writeStates(f"{job.id},{job.nb_task},{job.job_starting_time},{job.finishing_time}")
+            
+            self.writeStates(f"{job.id},{job.nb_task},{job.execution_time},{job.job_starting_time},{job.finishing_time}")
             self.historiques[id] = copy.deepcopy(self.running_job[id])
             del self.running_job[id]
         return True  
@@ -370,7 +373,7 @@ class JobInjector:
             print(f"========= job {id} finished")
             job = self.running_job[id]
             job.finishing_time = time.time()
-            self.writeStates(f"{job.id},{job.nb_task},{job.job_starting_time},{job.finishing_time}")
+            self.writeStates(f"{job.id},{job.nb_task},{job.execution_time},{job.job_starting_time},{job.finishing_time}")
             self.historiques[id] = copy.deepcopy(self.running_job[id])
             del self.running_job[id]
         return True  
@@ -388,7 +391,7 @@ class JobInjector:
             sorted_keys = sorted(self.running_job.keys(), key=lambda k: self.running_job[k].execution_time, reverse=True)
             return sorted_keys       
         """
-        #return sorted(self.running_job.keys(), key=lambda k: self.running_job[k].execution_time, reverse=True)
+        return sorted(self.running_job.keys(), key=lambda k: self.running_job[k].execution_time*self.running_job[k].nb_task, reverse=True)
         
         return self.running_job.keys()
 
@@ -617,7 +620,7 @@ class JobInjector:
                 if task.state == "Started" and task.host_node in nodes:
                     nodes.remove(task.host_node)
 
-        return None if len(nodes) == 0 else copy.deepcopy([random.choice(nodes)])                 
+        return None if len(nodes) == 0 else copy.deepcopy([random.choice(nodes)])[0]                
     
     def getAvailabelNodes(self):
         nodes = [id for id in range(self.nb_nodes)]

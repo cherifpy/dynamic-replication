@@ -1,12 +1,12 @@
-import copy
+"""import copy
 import time
 from params import *
 
 def updateRunningJobsList(self,):
-    """
-        Cas 1: we have heterogenose task and dataset with 1 and only replica
+    
+    #    Cas 1: we have heterogenose task and dataset with 1 and only replica
 
-    """
+    
     delete = []
     for job_id in self.running_job.keys():
         end = False
@@ -219,10 +219,10 @@ def getAvailabledNodes(self):
 
 
     def analyseOnCaseOne(self):
-        """
-            Cas 1: we have heterogenose task and dataset with 1 and only replica
+        
+            #Cas 1: we have heterogenose task and dataset with 1 and only replica
 
-        """
+        
         delete = []
         for job_id in self.running_job.keys():
             end = False
@@ -342,3 +342,4 @@ def getAvailabledNodes(self):
             self.historiques[id] = copy.deepcopy(self.running_job[id])
             del self.running_job[id]
         return True
+"""
