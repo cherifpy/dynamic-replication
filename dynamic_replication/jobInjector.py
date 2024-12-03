@@ -160,7 +160,7 @@ class JobInjector:
                 print("========= All jobs executed")
                 break
 
-    def SimulateArrivingJobs(self,lambda_rate=0.5,job_to_inject = 10):
+    def SimulateArrivingJobs(self,lambda_rate=1,job_to_inject = 10):
         if not self.nodes_infos:
             return False
         self.exp_start_time = time.time()
@@ -228,20 +228,21 @@ class JobInjector:
                     self.waiting_list.append((job_id, job))
                 self.replicatWithThreeStrategies()
 
-                ##
-                #Injecting jobs to the waiting list
-                if time.time() - current_time > inter_arrival_time:
-                    if i_job < job_to_inject:
+            ##
+            #Injecting jobs to the waiting list
+            if time.time() - current_time > inter_arrival_time:
+                if i_job < job_to_inject:
+                    for i in range(random.randint(1,4)):
                         new_job_id, new_job = self.generateJob()
                         job_list.append((new_job_id, new_job))
-                        inter_arrival_time = random.expovariate(lambda_rate)
-                        current_time = time.time()
-                        print("========= new job arrived")
-                        i_job +=1
+                    inter_arrival_time = random.expovariate(lambda_rate)
+                    current_time = time.time()
+                    print("========= new job arrived")
+                    i_job +=1
 
             self.replicatWithThreeStrategies()
 
-            if len(self.running_job.keys()) == 0 and i_job>=job_to_inject:
+            if len(self.running_job.keys()) == 0 and i_job==job_to_inject:
                 print("========= All jobs executed")
                 break
 
@@ -751,9 +752,7 @@ if __name__ == "__main__":
        [100., 100., 100., 100., 100., 100., 100.,  -1., 100., 100., 100.],
        [100., 100., 100., 100., 100., 100., 100., 100.,  -1., 100., 100.],
        [100., 100., 100., 100., 100., 100., 100., 100., 100.,  -1., 100.],
-       [100., 100., 100., 100., 100., 100., 100., 100., 100., 100.,  -1.]], 'IPs_ADDRESS': ['172.16.193.16', '172.16.193.18', '172.16.193.20', '172.16.193.22', '172.16.193.25', '172.16.193.28', '172.16.193.39', '172.16.193.41', '172.16.193.43', '172.16.193.45'], 'infos': {0: {'latency': 100.0, 'id': 0, 'node_ip': '172.16.193.16', 'node_port': 8880}, 1: {'latency': 100.0, 'id': 1, 'node_ip': '172.16.193.18', 'node_port': 8881}, 2: {'latency': 100.0, 'id': 2, 'node_ip': '172.16.193.20', 'node_port': 8882}, 3: {'latency': 100.0, 'id': 3, 'node_ip': '172.16.193.22', 'node_port': 8883}, 4: {'latency': 100.0, 'id': 4, 'node_ip': '172.16.193.25', 'node_port': 8884}, 5: {'latency': 100.0, 'id': 5, 'node_ip': '172.16.193.28', 'node_port': 8885}, 6: {'latency': 100.0, 'id': 6, 'node_ip': '172.16.193.39', 'node_port': 8886}, 7: {'latency': 100.0, 'id': 7, 'node_ip': '172.16.193.41', 'node_port': 8887}, 8: {'latency': 100.0, 'id': 8, 'node_ip': '172.16.193.43', 'node_port': 8888}, 9: {'latency': 100.0, 'id': 9, 'node_ip': '172.16.193.45', 'node_port': 8889}}}
-
-
+       [100., 100., 100., 100., 100., 100., 100., 100., 100., 100.,  -1.]], 'IPs_ADDRESS': ['172.16.193.2', '172.16.193.20', '172.16.193.21', '172.16.193.22', '172.16.193.23', '172.16.193.28', '172.16.193.34', '172.16.193.37', '172.16.193.43', '172.16.193.45'], 'infos': {0: {'latency': 100.0, 'id': 0, 'node_ip': '172.16.193.2', 'node_port': 8880}, 1: {'latency': 100.0, 'id': 1, 'node_ip': '172.16.193.20', 'node_port': 8881}, 2: {'latency': 100.0, 'id': 2, 'node_ip': '172.16.193.21', 'node_port': 8882}, 3: {'latency': 100.0, 'id': 3, 'node_ip': '172.16.193.22', 'node_port': 8883}, 4: {'latency': 100.0, 'id': 4, 'node_ip': '172.16.193.23', 'node_port': 8884}, 5: {'latency': 100.0, 'id': 5, 'node_ip': '172.16.193.28', 'node_port': 8885}, 6: {'latency': 100.0, 'id': 6, 'node_ip': '172.16.193.34', 'node_port': 8886}, 7: {'latency': 100.0, 'id': 7, 'node_ip': '172.16.193.37', 'node_port': 8887}, 8: {'latency': 100.0, 'id': 8, 'node_ip': '172.16.193.43', 'node_port': 8888}, 9: {'latency': 100.0, 'id': 9, 'node_ip': '172.16.193.45', 'node_port': 8889}}}
 
     job_injector = JobInjector(
         nb_nodes = NB_NODES,
