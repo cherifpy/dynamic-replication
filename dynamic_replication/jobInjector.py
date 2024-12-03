@@ -237,9 +237,11 @@ class JobInjector:
                         inter_arrival_time = random.expovariate(lambda_rate)
                         current_time = time.time()
                         print("========= new job arrived")
+                        i_job +=1
+
             self.replicatWithThreeStrategies()
 
-            if len(self.running_job.keys()) == 0:
+            if len(self.running_job.keys()) == 0 and i_job>=job_to_inject:
                 print("========= All jobs executed")
                 break
 
