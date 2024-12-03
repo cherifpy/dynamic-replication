@@ -1,14 +1,15 @@
-
+import time
 
 class Job:
     nb_job = 0 
-    def __init__(self, nb_task, execution_times, id_dataset, size_dataset):
+    def __init__(self,arriving_time, nb_task, execution_times, id_dataset, size_dataset):
         """
             nb_task
             execution_times
             id_dataset
             size_dataset
         """
+        self.arriving_time = time.time()
         self.id = Job.nb_job
         self.nb_task = nb_task
         self.execution_time = float('inf')

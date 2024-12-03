@@ -53,7 +53,7 @@ class JobInjector:
         
         str = "/tmp/temps_execution.txt"
         self.stats = open(str,'w')#self.writeStates(f"{job.id},{job.nb_task},{job.job_starting_time},{job.finishing_time}")
-        self.stats.write('job_id,nb_tasks,task_execution_time, starting_time,finishing_time\n')
+        self.stats.write('job_id,nb_tasks,task_execution_time, arriving_time,starting_time,finishing_time\n')
         self.stats.close()
 
         self.stats_on_task = open("/tmp/stats_on_tasks.txt",'w')
@@ -317,7 +317,7 @@ class JobInjector:
             print(f"========= job {id} finished")
             job = self.running_job[id]
             job.finishing_time = time.time()
-            self.writeStates(f"{job.id},{job.nb_task},{job.execution_time},{job.job_starting_time},{job.finishing_time}")
+            self.writeStates(f"{job.id},{job.nb_task},{job.execution_time},{job.arriving_time},{job.job_starting_time},{job.finishing_time}")
             self.historiques[id] = copy.deepcopy(self.running_job[id])
             del self.running_job[id]
         return True 
@@ -393,7 +393,7 @@ class JobInjector:
             print(f"========= job {id} finished")
             job = self.running_job[id]
             job.finishing_time = time.time()
-            self.writeStates(f"{job.id},{job.nb_task},{job.execution_time},{job.job_starting_time},{job.finishing_time}")
+            self.writeStates(f"{job.id},{job.nb_task},{job.execution_time},{job.arriving_time},{job.job_starting_time},{job.finishing_time}")
             self.historiques[id] = copy.deepcopy(self.running_job[id])
             del self.running_job[id]
         return True  
@@ -411,7 +411,7 @@ class JobInjector:
             sorted_keys = sorted(self.running_job.keys(), key=lambda k: self.running_job[k].execution_time, reverse=True)
             return sorted_keys       
         """
-        #return sorted(self.running_job.keys(), key=lambda k: self.running_job[k].execution_time*self.running_job[k].nb_task, reverse=False)
+        return sorted(self.running_job.keys(), key=lambda k: self.running_job[k].execution_time*self.running_job[k].execution_time, reverse=False)
         
         return self.running_job.keys()
 
@@ -525,6 +525,7 @@ class JobInjector:
             execution_times.append(random.randint(1, MAX_EXECUTION_TIME))"""
 
         job = Job(
+            arriving_time = time.time(),
             nb_task=nb_tasks,
             execution_times=execution_time,
             id_dataset=self.id_dataset,
@@ -559,7 +560,8 @@ class JobInjector:
                 nb_task=info[0],
                 execution_times=info[1],
                 id_dataset=info[2],
-                size_dataset=info[3]
+                size_dataset=info[3],
+                arriving_time=time.time(),
             )
 
             job.tasks_list = [Task(f'task_{i}', info[1], self.id_dataset) for i in range(info[0])]
@@ -583,7 +585,8 @@ class JobInjector:
                 nb_task=int(info["nb_tasks"]),
                 execution_times=info["time"],
                 id_dataset=info["id_dataset"],
-                size_dataset=info["dataset_size"]
+                size_dataset=info["dataset_size"],
+                arriving_time=time.time(),
             )
 
             # Generate the list of tasks for this job
