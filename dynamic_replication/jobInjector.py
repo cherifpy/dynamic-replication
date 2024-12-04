@@ -5,11 +5,12 @@ import multiprocessing.process
 import redis
 from experiments.params import  (
     SERVER_REPLICA_MANAGER_PORT, 
-    BD_LISTENING_PORT,
     MAX_EXECUTION_TIME,
     MAX_REPLICA_NUMBER,
+    BD_LISTENING_PORT,
     NB_REPLICAS_INIT,
     MAX_DATA_SIZE,
+    MAX_TIME_EXP,
     MAX_NB_TASKS,
     BANDWIDTH,
     NB_NODES,
@@ -53,7 +54,7 @@ class JobInjector:
         
         str = "/tmp/temps_execution.txt"
         self.stats = open(str,'w')#self.writeStates(f"{job.id},{job.nb_task},{job.job_starting_time},{job.finishing_time}")
-        self.stats.write('job_id,nb_tasks,task_execution_time, arriving_time,starting_time,finishing_time,dataset size, \n')
+        self.stats.write('job_id,nb_tasks,task_execution_time, arriving_time,starting_time,finishing_time,dataset size,transfert time \n')
         self.stats.close()
 
         self.stats_on_task = open("/tmp/stats_on_tasks.txt",'w')
@@ -232,7 +233,7 @@ class JobInjector:
             ##
             #Injecting jobs to the waiting list
             if time.time() - current_time > inter_arrival_time:
-                if i_job < job_to_inject:
+                if time.time() - self.exp_start_time < MAX_TIME_EXP*60:
                     for i in range(random.randint(1,4)):
                         new_job_id, new_job = self.generateJob()
                         job_list.append((new_job_id, new_job))
@@ -412,7 +413,7 @@ class JobInjector:
             sorted_keys = sorted(self.running_job.keys(), key=lambda k: self.running_job[k].execution_time, reverse=True)
             return sorted_keys       
         """
-        return sorted(self.running_job.keys(), key=lambda k: self.running_job[k].execution_time*self.running_job[k].execution_time, reverse=False)
+        #return sorted(self.running_job.keys(), key=lambda k: self.running_job[k].execution_time*self.running_job[k].execution_time, reverse=False)
         
         return self.running_job.keys()
 
