@@ -53,7 +53,7 @@ class JobInjector:
         
         str = "/tmp/temps_execution.txt"
         self.stats = open(str,'w')#self.writeStates(f"{job.id},{job.nb_task},{job.job_starting_time},{job.finishing_time}")
-        self.stats.write('job_id,nb_tasks,task_execution_time, arriving_time,starting_time,finishing_time\n')
+        self.stats.write('job_id,nb_tasks,task_execution_time, arriving_time,starting_time,finishing_time,dataset size, \n')
         self.stats.close()
 
         self.stats_on_task = open("/tmp/stats_on_tasks.txt",'w')
@@ -192,6 +192,7 @@ class JobInjector:
                     r, t_transfert = self.replicate(host, job_id, job.id_dataset, job.size_dataset)
                     if r: 
                         job.nb_replicas +=1
+                        job.job_starting_time = time.time()
                         print(f"{i+1} Replica sended")
                         self.writeOutput(f"Replica of dataset {job.id_dataset} sended to {host}")
                         host_with_replica.append(host)
@@ -203,7 +204,7 @@ class JobInjector:
                         print("no replica sended")
 
                 for i,host in enumerate(host_with_replica):
-                    job.job_starting_time = time.time()
+                    
                     rep, latency = self.sendTaskToNode(host, job_id, job.tasks_list[i].execution_time,job.id_dataset)
                     if rep['started']:
                         
@@ -317,7 +318,7 @@ class JobInjector:
             print(f"========= job {id} finished")
             job = self.running_job[id]
             job.finishing_time = time.time()
-            self.writeStates(f"{job.id},{job.nb_task},{job.execution_time},{job.arriving_time},{job.job_starting_time},{job.finishing_time}")
+            self.writeStates(f"{job.id},{job.nb_task},{job.execution_time},{job.arriving_time},{job.job_starting_time},{job.finishing_time},{job.size_dataset},{job.transfert_time}")
             self.historiques[id] = copy.deepcopy(self.running_job[id])
             del self.running_job[id]
         return True 
@@ -393,7 +394,7 @@ class JobInjector:
             print(f"========= job {id} finished")
             job = self.running_job[id]
             job.finishing_time = time.time()
-            self.writeStates(f"{job.id},{job.nb_task},{job.execution_time},{job.arriving_time},{job.job_starting_time},{job.finishing_time}")
+            self.writeStates(f"{job.id},{job.nb_task},{job.execution_time},{job.arriving_time},{job.job_starting_time},{job.finishing_time},{job.size_dataset},{job.transfert_time}")
             self.historiques[id] = copy.deepcopy(self.running_job[id])
             del self.running_job[id]
         return True  
@@ -745,7 +746,7 @@ class JobInjector:
         
 if __name__ == "__main__":
 
-    data = {'IP_ADDRESS': '172.16.193.9', 'graphe_infos': [[ -1., 100., 100., 100., 100., 100., 100., 100., 100., 100., 100.],
+    data = {'IP_ADDRESS': '172.16.193.8', 'graphe_infos': [[ -1., 100., 100., 100., 100., 100., 100., 100., 100., 100., 100.],
        [100.,  -1., 100., 100., 100., 100., 100., 100., 100., 100., 100.],
        [100., 100.,  -1., 100., 100., 100., 100., 100., 100., 100., 100.],
        [100., 100., 100.,  -1., 100., 100., 100., 100., 100., 100., 100.],
@@ -755,8 +756,7 @@ if __name__ == "__main__":
        [100., 100., 100., 100., 100., 100., 100.,  -1., 100., 100., 100.],
        [100., 100., 100., 100., 100., 100., 100., 100.,  -1., 100., 100.],
        [100., 100., 100., 100., 100., 100., 100., 100., 100.,  -1., 100.],
-       [100., 100., 100., 100., 100., 100., 100., 100., 100., 100.,  -1.]], 'IPs_ADDRESS': ['172.16.193.2', '172.16.193.20', '172.16.193.21', '172.16.193.22', '172.16.193.23', '172.16.193.28', '172.16.193.34', '172.16.193.37', '172.16.193.43', '172.16.193.45'], 'infos': {0: {'latency': 100.0, 'id': 0, 'node_ip': '172.16.193.2', 'node_port': 8880}, 1: {'latency': 100.0, 'id': 1, 'node_ip': '172.16.193.20', 'node_port': 8881}, 2: {'latency': 100.0, 'id': 2, 'node_ip': '172.16.193.21', 'node_port': 8882}, 3: {'latency': 100.0, 'id': 3, 'node_ip': '172.16.193.22', 'node_port': 8883}, 4: {'latency': 100.0, 'id': 4, 'node_ip': '172.16.193.23', 'node_port': 8884}, 5: {'latency': 100.0, 'id': 5, 'node_ip': '172.16.193.28', 'node_port': 8885}, 6: {'latency': 100.0, 'id': 6, 'node_ip': '172.16.193.34', 'node_port': 8886}, 7: {'latency': 100.0, 'id': 7, 'node_ip': '172.16.193.37', 'node_port': 8887}, 8: {'latency': 100.0, 'id': 8, 'node_ip': '172.16.193.43', 'node_port': 8888}, 9: {'latency': 100.0, 'id': 9, 'node_ip': '172.16.193.45', 'node_port': 8889}}}
-
+       [100., 100., 100., 100., 100., 100., 100., 100., 100., 100.,  -1.]], 'IPs_ADDRESS': ['172.16.193.10', '172.16.193.14', '172.16.193.23', '172.16.193.3', '172.16.193.30', '172.16.193.36', '172.16.193.40', '172.16.193.42', '172.16.193.46', '172.16.193.5'], 'infos': {0: {'latency': 100.0, 'id': 0, 'node_ip': '172.16.193.10', 'node_port': 8880}, 1: {'latency': 100.0, 'id': 1, 'node_ip': '172.16.193.14', 'node_port': 8881}, 2: {'latency': 100.0, 'id': 2, 'node_ip': '172.16.193.23', 'node_port': 8882}, 3: {'latency': 100.0, 'id': 3, 'node_ip': '172.16.193.3', 'node_port': 8883}, 4: {'latency': 100.0, 'id': 4, 'node_ip': '172.16.193.30', 'node_port': 8884}, 5: {'latency': 100.0, 'id': 5, 'node_ip': '172.16.193.36', 'node_port': 8885}, 6: {'latency': 100.0, 'id': 6, 'node_ip': '172.16.193.40', 'node_port': 8886}, 7: {'latency': 100.0, 'id': 7, 'node_ip': '172.16.193.42', 'node_port': 8887}, 8: {'latency': 100.0, 'id': 8, 'node_ip': '172.16.193.46', 'node_port': 8888}, 9: {'latency': 100.0, 'id': 9, 'node_ip': '172.16.193.5', 'node_port': 8889}}}
     job_injector = JobInjector(
         nb_nodes = NB_NODES,
         graphe= data["graphe_infos"],
