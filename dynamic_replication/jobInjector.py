@@ -93,8 +93,8 @@ class JobInjector:
 
         job_id, job = self.generateJob()
         self.waiting_list.append((job_id,job))"""
-        job_list = []
-        job_list = self.staticJobsFromJSON()#self.staticJobs()#
+        self.job_list = []
+        #job_list = self.staticJobsFromJSON()#self.staticJobs()#
         j = 0
         i_job = 0
         inter_arrival_time = 2
@@ -166,13 +166,15 @@ class JobInjector:
                     i_job +=1
             """
             ## inject n jobs
+            _ = self.injectJobs(self.job_list)
+
             self.replicatWithThreeStrategies()
 
             if len(self.running_job.keys()) == 0 and self.index >= self.nb_arriving_job:
                 print("========= All jobs executed")
                 break
     
-    def injectJobs(self):
+    def injectJobs(self, job_list):
 
         while self.index < self.nb_arriving_job:
             a_time = int(time.time() - self.exp_start_time)
@@ -184,19 +186,20 @@ class JobInjector:
                     job = Job(
                         arriving_time = time.time(),
                         nb_task=row['nb_tasks'],
-                        execution_times=row['execution_time'],
+                        execution_times=row['time'],
                         id_dataset=self.id_dataset,
                         size_dataset=row['dataset_size']
                     )
 
-                    job.tasks_list = [Task(f'task_{i}', row['execution_time'], self.id_dataset) for i in range(row['nb_tasks'])]
+                    job.tasks_list = [Task(f'task_{i}', row['time'], self.id_dataset) for i in range(row['nb_tasks'])]
 
                     self.jobs_list[self.nb_jobs] = job
                     self.id_dataset +=1
                     self.nb_jobs +=1
+                    job_list.append((self.nb_jobs, job))
             
             self.df_jobs = self.df_jobs[self.df_jobs["arriving_time"] != a_time]
-
+        return self.job_list
     def replicateWithInjectingJobs(self,):
         """
             in this function i will inject 10 job on the infrastructure
