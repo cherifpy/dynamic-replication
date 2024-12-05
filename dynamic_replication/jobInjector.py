@@ -79,87 +79,10 @@ class JobInjector:
         self.running_job: Dict[int, Job] = {}
         self.historiques = {}
         self.running_tasks = []
+        self.index = 0
 
-
-    def start(self,):
-        if not self.nodes_infos:
-            return False
-        self.exp_start_time = time.time()
-        """job_id, job = self.generateJob()
-        self.waiting_list.append((job_id,job))
-
-        job_id, job = self.generateJob()
-        self.waiting_list.append((job_id,job))"""
-        job_list = self.staticJobsFromJSON()#self.staticJobs()#
-        j = 0
-        while True:
-            while j < len(job_list):
-                job_started = False
-                
-                job_id, job = job_list[j]
-                
-                self.dataset_counter += 1
-                
-                host_nodes = self.selectHostsNodes()
-                
-                host_with_replica = []
-                for i, host in enumerate(host_nodes):
-                    
-                    r, t_transfert = self.replicate(host, job_id, job.id_dataset, job.size_dataset)
-                    if r: 
-                        job.nb_replicas +=1
-                        print(f"{i+1} Replica sended")
-                        self.writeOutput(f"Replica of dataset {job.id_dataset} sended to {host}")
-                        host_with_replica.append(host)
-                        t_start = time.time()
-                        job.transfert_time = transfertTime(BANDWIDTH, 100, job.size_dataset)
-                        self.wrtieStatsOnTasks(f"{-1},{job_id},{host},{t_start},{t_start + job.transfert_time},{job.transfert_time},{job.id_dataset}")
-                        #self.wrtieStatsOnTasks(f"{job_id},{task.task_id},{task.host_node},{task.starting_time},{task.execution_time + task.starting_time},{task.execution_time},{task.id_dataset}")
-                    else: 
-                        print("no replica sended")
-
-                for i,host in enumerate(host_with_replica):
-                    job.job_starting_time = time.time()
-                    rep, latency = self.sendTaskToNode(host, job_id, job.tasks_list[i].execution_time,job.id_dataset)
-                    if rep['started']:
-                        
-                        self.writeOutput(f"Job {job_id} started")
-                        self.writeOutput(f"Task {i} of job {job_id} started on node {host}")
-                        print("========= Job started")
-                        print(f"========= Task of job {job_id} started on node {host}")
-                        job.tasks_list[i].starting_time = rep['starting_time']+job.transfert_time
-                        job.tasks_list[i].host_node = host
-                        job.tasks_list[i].executed = True
-                        job.tasks_list[i].state = "Started"
-                        job.executing_tasks.append((i, job.tasks_list[i].task_id))
-                        self.running_tasks.append((job_id, job.tasks_list[i].task_id, job.tasks_list[i].starting_time, job.tasks_list[i].execution_time, job.tasks_list[i].host_node))
-                        job.ids_nodes.append(host)
-                        job_started = True
-                        job.starting_times.append(rep['starting_time'])
-                        job.nb_task_not_lunched -=1
-                        
-                if job_started:
-                    self.running_job[job_id] = job
-                    j+=1
-                    self.waiting_list.append((job_id, job))
-                self.replicatWithThreeStrategies()
-
-            #analyse si ya moyen d'ajouter un job
-            """to_replicate = self.analyseJobExecution()
-            
-            for id_ in to_replicate:
-                small_job = self.running_job[id_]
-                added  = self.addNewTaskOnNewNode(id_, small_job.transfert_time)
-                if added: 
-                    small_job.nb_replicas +=1
-                    self.running_job[id_].nb_task_not_lunched -=1
-                    #This change thinks in this cas i only add one replica peer job
-                    print(f'une replica ajouter au job {id_}')
-            """            
-            self.replicatWithThreeStrategies()
-            if len(self.running_job.keys()) == 0:
-                print("========= All jobs executed")
-                break
+        self.df_jobs = pd.read_json("/home/csimohammed/code/dynamic_replication/experiments/job/jobs.json")
+        self.nb_arriving_job = self.df_jobs.shape[0]
 
     def SimulateArrivingJobs(self,lambda_rate=1,job_to_inject = 10):
         if not self.nodes_infos:
@@ -232,7 +155,7 @@ class JobInjector:
 
             ##
             #Injecting jobs to the waiting list
-            if time.time() - current_time > inter_arrival_time:
+            """if time.time() - current_time > inter_arrival_time:
                 if time.time() - self.exp_start_time < MAX_TIME_EXP*60:
                     for i in range(random.randint(1,4)):
                         new_job_id, new_job = self.generateJob()
@@ -241,13 +164,38 @@ class JobInjector:
                     current_time = time.time()
                     print("========= new job arrived")
                     i_job +=1
-
+            """
+            ## inject n jobs
             self.replicatWithThreeStrategies()
 
-            if len(self.running_job.keys()) == 0 and time.time() - self.exp_start_time > MAX_TIME_EXP*60:
+            if len(self.running_job.keys()) == 0 and self.index >= self.nb_arriving_job:
                 print("========= All jobs executed")
                 break
+    
+    def injectJobs(self):
 
+        while self.index < self.nb_arriving_job:
+            a_time = int(time.time() - self.exp_start_time)
+            jobs = self.df_jobs[self.df_jobs["arriving_time"] == a_time]
+            if jobs.shape[0] != 0:
+                self.index += jobs.shape[0]
+                for i, row in jobs.iterrows():
+                    print(f"job {row['job_id']} arriving at {a_time} added at time {row['arriving_time']}")
+                    job = Job(
+                        arriving_time = time.time(),
+                        nb_task=row['nb_tasks'],
+                        execution_times=row['execution_time'],
+                        id_dataset=self.id_dataset,
+                        size_dataset=row['dataset_size']
+                    )
+
+                    job.tasks_list = [Task(f'task_{i}', row['execution_time'], self.id_dataset) for i in range(row['nb_tasks'])]
+
+                    self.jobs_list[self.nb_jobs] = job
+                    self.id_dataset +=1
+                    self.nb_jobs +=1
+            
+            self.df_jobs = self.df_jobs[self.df_jobs["arriving_time"] != a_time]
 
     def replicateWithInjectingJobs(self,):
         """
