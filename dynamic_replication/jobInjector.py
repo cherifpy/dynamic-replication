@@ -81,7 +81,7 @@ class JobInjector:
         self.running_tasks = []
         self.index = 0
 
-        self.df_jobs = pd.read_json("/home/csimohammed/code/dynamic_replication/experiments/job/jobs.json")
+        self.df_jobs = pd.read_json("/home/csimohammed/code/dynamic_replication/experiments/jobs/jobs.json")
         self.nb_arriving_job = self.df_jobs.shape[0]
 
     def SimulateArrivingJobs(self,lambda_rate=1,job_to_inject = 10):
@@ -100,10 +100,11 @@ class JobInjector:
         inter_arrival_time = 2
         current_time = 0
         while True:
-            while j < len(job_list):
+            
+            while j < len(self.job_list):
                 job_started = False
                 
-                job_id, job = job_list[j]
+                job_id, job = self.job_list[j]
                 
                 self.dataset_counter += 1
                 
@@ -165,9 +166,10 @@ class JobInjector:
                     print("========= new job arrived")
                     i_job +=1
             """
+            
             ## inject n jobs
             _ = self.injectJobs(self.job_list)
-
+            
             self.replicatWithThreeStrategies()
 
             if len(self.running_job.keys()) == 0 and self.index >= self.nb_arriving_job:
@@ -176,7 +178,7 @@ class JobInjector:
     
     def injectJobs(self, job_list):
 
-        while self.index < self.nb_arriving_job:
+        if self.index < self.nb_arriving_job:
             a_time = int(time.time() - self.exp_start_time)
             jobs = self.df_jobs[self.df_jobs["arriving_time"] == a_time]
             if jobs.shape[0] != 0:
@@ -191,12 +193,13 @@ class JobInjector:
                         size_dataset=row['dataset_size']
                     )
 
-                    job.tasks_list = [Task(f'task_{i}', row['time'], self.id_dataset) for i in range(row['nb_tasks'])]
+                    job.tasks_list = [Task(f'task_{i}', row['time'], self.id_dataset) for i in range(int(row['nb_tasks']))]
 
                     self.jobs_list[self.nb_jobs] = job
                     self.id_dataset +=1
                     self.nb_jobs +=1
                     job_list.append((self.nb_jobs, job))
+                print(len(self.job_list))
             
             self.df_jobs = self.df_jobs[self.df_jobs["arriving_time"] != a_time]
         return self.job_list
@@ -698,7 +701,7 @@ class JobInjector:
         
 if __name__ == "__main__":
 
-    data = {'IP_ADDRESS': '172.16.193.6', 'graphe_infos': [[ -1., 100., 100., 100., 100., 100., 100., 100., 100., 100., 100.],
+    data = {'IP_ADDRESS': '172.16.193.4', 'graphe_infos': [[ -1., 100., 100., 100., 100., 100., 100., 100., 100., 100., 100.],
        [100.,  -1., 100., 100., 100., 100., 100., 100., 100., 100., 100.],
        [100., 100.,  -1., 100., 100., 100., 100., 100., 100., 100., 100.],
        [100., 100., 100.,  -1., 100., 100., 100., 100., 100., 100., 100.],
@@ -708,8 +711,7 @@ if __name__ == "__main__":
        [100., 100., 100., 100., 100., 100., 100.,  -1., 100., 100., 100.],
        [100., 100., 100., 100., 100., 100., 100., 100.,  -1., 100., 100.],
        [100., 100., 100., 100., 100., 100., 100., 100., 100.,  -1., 100.],
-       [100., 100., 100., 100., 100., 100., 100., 100., 100., 100.,  -1.]], 'IPs_ADDRESS': ['172.16.193.11', '172.16.193.12', '172.16.193.14', '172.16.193.18', '172.16.193.20', '172.16.193.25', '172.16.193.35', '172.16.193.39', '172.16.193.45', '172.16.193.5'], 'infos': {0: {'latency': 100.0, 'id': 0, 'node_ip': '172.16.193.11', 'node_port': 8880}, 1: {'latency': 100.0, 'id': 1, 'node_ip': '172.16.193.12', 'node_port': 8881}, 2: {'latency': 100.0, 'id': 2, 'node_ip': '172.16.193.14', 'node_port': 8882}, 3: {'latency': 100.0, 'id': 3, 'node_ip': '172.16.193.18', 'node_port': 8883}, 4: {'latency': 100.0, 'id': 4, 'node_ip': '172.16.193.20', 'node_port': 8884}, 5: {'latency': 100.0, 'id': 5, 'node_ip': '172.16.193.25', 'node_port': 8885}, 6: {'latency': 100.0, 'id': 6, 'node_ip': '172.16.193.35', 'node_port': 8886}, 7: {'latency': 100.0, 'id': 7, 'node_ip': '172.16.193.39', 'node_port': 8887}, 8: {'latency': 100.0, 'id': 8, 'node_ip': '172.16.193.45', 'node_port': 8888}, 9: {'latency': 100.0, 'id': 9, 'node_ip': '172.16.193.5', 'node_port': 8889}}}
-
+       [100., 100., 100., 100., 100., 100., 100., 100., 100., 100.,  -1.]], 'IPs_ADDRESS': ['172.16.193.11', '172.16.193.14', '172.16.193.2', '172.16.193.20', '172.16.193.23', '172.16.193.3', '172.16.193.32', '172.16.193.34', '172.16.193.35', '172.16.193.39'], 'infos': {0: {'latency': 100.0, 'id': 0, 'node_ip': '172.16.193.11', 'node_port': 8880}, 1: {'latency': 100.0, 'id': 1, 'node_ip': '172.16.193.14', 'node_port': 8881}, 2: {'latency': 100.0, 'id': 2, 'node_ip': '172.16.193.2', 'node_port': 8882}, 3: {'latency': 100.0, 'id': 3, 'node_ip': '172.16.193.20', 'node_port': 8883}, 4: {'latency': 100.0, 'id': 4, 'node_ip': '172.16.193.23', 'node_port': 8884}, 5: {'latency': 100.0, 'id': 5, 'node_ip': '172.16.193.3', 'node_port': 8885}, 6: {'latency': 100.0, 'id': 6, 'node_ip': '172.16.193.32', 'node_port': 8886}, 7: {'latency': 100.0, 'id': 7, 'node_ip': '172.16.193.34', 'node_port': 8887}, 8: {'latency': 100.0, 'id': 8, 'node_ip': '172.16.193.35', 'node_port': 8888}, 9: {'latency': 100.0, 'id': 9, 'node_ip': '172.16.193.39', 'node_port': 8889}}}
 
     
     job_injector = JobInjector(
