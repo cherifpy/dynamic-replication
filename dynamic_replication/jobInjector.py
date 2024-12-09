@@ -83,6 +83,7 @@ class JobInjector:
 
         self.df_jobs = pd.read_json("/home/csimohammed/code/dynamic_replication/experiments/jobs/jobs.json")
         self.nb_arriving_job = self.df_jobs.shape[0]
+        self.end = False
 
     def SimulateArrivingJobs(self,lambda_rate=1,job_to_inject = 10):
         if not self.nodes_infos:
@@ -187,7 +188,7 @@ class JobInjector:
                     print(f"job {row['job_id']} arriving at {a_time} added at time {row['arriving_time']}")
                     job = Job(
                         arriving_time = time.time(),
-                        nb_task=row['nb_tasks'],
+                        nb_task=int(row['nb_tasks']),
                         execution_times=row['time'],
                         id_dataset=self.id_dataset,
                         size_dataset=row['dataset_size']
@@ -203,6 +204,8 @@ class JobInjector:
             
             self.df_jobs = self.df_jobs[self.df_jobs["arriving_time"] != a_time]
         return self.job_list
+    
+
     def replicateWithInjectingJobs(self,):
         """
             in this function i will inject 10 job on the infrastructure
@@ -357,19 +360,39 @@ class JobInjector:
     def orderJobs(self):
         
         jobs = copy.deepcopy(self.running_job)
-        """nb_jobs = len(jobs.keys())
+        nb_jobs, jobs_ids = self.nbJobsToReplicat()
         nb_availabel_nodes = self.nbAvailabelNodes()
-
-        if nb_availabel_nodes > nb_jobs:
-            return self.running_job.keys()
         
-        if nb_availabel_nodes < (nb_jobs//2):
-            sorted_keys = sorted(self.running_job.keys(), key=lambda k: self.running_job[k].execution_time, reverse=True)
+        if nb_availabel_nodes >= nb_jobs:
+            return jobs_ids
+        
+        if nb_availabel_nodes < nb_jobs: # condition a changer
+            sorted_keys =[]
+            jobs_objcts = []
+            for key in jobs_ids:
+                job = self.running_job[key]
+                objective = (job.execution_time + job.transfert_time) * (1/job.nb_task_not_lunched)
+                jobs_objcts.append((key, objective))
+
+            sorted_keys = [t[0] for t in sorted(jobs_objcts, key=lambda k:k[1], reverse=False)]
             return sorted_keys       
-        """
+        
         #return sorted(self.running_job.keys(), key=lambda k: self.running_job[k].execution_time*self.running_job[k].execution_time, reverse=False)
         
-        return self.running_job.keys()
+        return jobs_ids
+
+    def nbJobsToReplicat(self):
+        nb_job = 0
+        jobs_keys = []
+        for job_id, job in self.running_job.items():
+            if job.transfert_time == float('inf') or job.execution_time == float('inf'):
+                continue
+
+            if job.transfert_time > job.execution_time and job.nb_task_not_lunched >= 2:
+                nb_job +=1
+                jobs_keys.append(job_id)
+        
+        return nb_job, job
 
     def nbAvailabelNodes(self):
         #Ordonner les keys 
@@ -701,7 +724,7 @@ class JobInjector:
         
 if __name__ == "__main__":
 
-    data = {'IP_ADDRESS': '172.16.193.4', 'graphe_infos': [[ -1., 100., 100., 100., 100., 100., 100., 100., 100., 100., 100.],
+    data = {'IP_ADDRESS': '172.16.193.9', 'graphe_infos': [[ -1., 100., 100., 100., 100., 100., 100., 100., 100., 100., 100.],
        [100.,  -1., 100., 100., 100., 100., 100., 100., 100., 100., 100.],
        [100., 100.,  -1., 100., 100., 100., 100., 100., 100., 100., 100.],
        [100., 100., 100.,  -1., 100., 100., 100., 100., 100., 100., 100.],
@@ -711,8 +734,7 @@ if __name__ == "__main__":
        [100., 100., 100., 100., 100., 100., 100.,  -1., 100., 100., 100.],
        [100., 100., 100., 100., 100., 100., 100., 100.,  -1., 100., 100.],
        [100., 100., 100., 100., 100., 100., 100., 100., 100.,  -1., 100.],
-       [100., 100., 100., 100., 100., 100., 100., 100., 100., 100.,  -1.]], 'IPs_ADDRESS': ['172.16.193.11', '172.16.193.14', '172.16.193.2', '172.16.193.20', '172.16.193.23', '172.16.193.3', '172.16.193.32', '172.16.193.34', '172.16.193.35', '172.16.193.39'], 'infos': {0: {'latency': 100.0, 'id': 0, 'node_ip': '172.16.193.11', 'node_port': 8880}, 1: {'latency': 100.0, 'id': 1, 'node_ip': '172.16.193.14', 'node_port': 8881}, 2: {'latency': 100.0, 'id': 2, 'node_ip': '172.16.193.2', 'node_port': 8882}, 3: {'latency': 100.0, 'id': 3, 'node_ip': '172.16.193.20', 'node_port': 8883}, 4: {'latency': 100.0, 'id': 4, 'node_ip': '172.16.193.23', 'node_port': 8884}, 5: {'latency': 100.0, 'id': 5, 'node_ip': '172.16.193.3', 'node_port': 8885}, 6: {'latency': 100.0, 'id': 6, 'node_ip': '172.16.193.32', 'node_port': 8886}, 7: {'latency': 100.0, 'id': 7, 'node_ip': '172.16.193.34', 'node_port': 8887}, 8: {'latency': 100.0, 'id': 8, 'node_ip': '172.16.193.35', 'node_port': 8888}, 9: {'latency': 100.0, 'id': 9, 'node_ip': '172.16.193.39', 'node_port': 8889}}}
-
+       [100., 100., 100., 100., 100., 100., 100., 100., 100., 100.,  -1.]], 'IPs_ADDRESS': ['172.16.193.16', '172.16.193.24', '172.16.193.36', '172.16.193.39', '172.16.193.40', '172.16.193.41', '172.16.193.42', '172.16.193.46', '172.16.193.48', '172.16.193.5'], 'infos': {0: {'latency': 100.0, 'id': 0, 'node_ip': '172.16.193.16', 'node_port': 8880}, 1: {'latency': 100.0, 'id': 1, 'node_ip': '172.16.193.24', 'node_port': 8881}, 2: {'latency': 100.0, 'id': 2, 'node_ip': '172.16.193.36', 'node_port': 8882}, 3: {'latency': 100.0, 'id': 3, 'node_ip': '172.16.193.39', 'node_port': 8883}, 4: {'latency': 100.0, 'id': 4, 'node_ip': '172.16.193.40', 'node_port': 8884}, 5: {'latency': 100.0, 'id': 5, 'node_ip': '172.16.193.41', 'node_port': 8885}, 6: {'latency': 100.0, 'id': 6, 'node_ip': '172.16.193.42', 'node_port': 8886}, 7: {'latency': 100.0, 'id': 7, 'node_ip': '172.16.193.46', 'node_port': 8887}, 8: {'latency': 100.0, 'id': 8, 'node_ip': '172.16.193.48', 'node_port': 8888}, 9: {'latency': 100.0, 'id': 9, 'node_ip': '172.16.193.5', 'node_port': 8889}}}
     
     job_injector = JobInjector(
         nb_nodes = NB_NODES,
