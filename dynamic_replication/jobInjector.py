@@ -373,11 +373,11 @@ class JobInjector:
             for key in jobs_ids:
                 job = self.running_job[key]
                 if (job.transfert_time < job.execution_time and job.nb_task_not_lunched <= 2) or job.transfert_time > job.execution_time:
-                    objective = float('inf')
+                    objective = float('-inf')
                 else: objective = (job.execution_time + job.transfert_time) * (1/job.nb_task_not_lunched)
                 jobs_objcts.append((key, objective))
 
-            sorted_keys = [t[0] for t in sorted(jobs_objcts, key=lambda k:k[1], reverse=False)]
+            sorted_keys = [t[0] for t in sorted(jobs_objcts, key=lambda k:k[1], reverse=True)]
             return sorted_keys       
         
         #return sorted(self.running_job.keys(), key=lambda k: self.running_job[k].execution_time*self.running_job[k].execution_time, reverse=False)
