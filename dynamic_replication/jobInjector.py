@@ -369,9 +369,12 @@ class JobInjector:
         if nb_availabel_nodes < nb_jobs: # condition a changer
             sorted_keys =[]
             jobs_objcts = []
+            
             for key in jobs_ids:
                 job = self.running_job[key]
-                objective = (job.execution_time + job.transfert_time) * (1/job.nb_task_not_lunched)
+                if (job.transfert_time < job.execution_time and job.nb_task_not_lunched <= 2) or job.transfert_time > job.execution_time:
+                    objective = float('inf')
+                else: objective = (job.execution_time + job.transfert_time) * (1/job.nb_task_not_lunched)
                 jobs_objcts.append((key, objective))
 
             sorted_keys = [t[0] for t in sorted(jobs_objcts, key=lambda k:k[1], reverse=False)]
@@ -385,12 +388,13 @@ class JobInjector:
         nb_job = 0
         jobs_keys = []
         for job_id, job in self.running_job.items():
-            if job.transfert_time == float('inf') or job.execution_time == float('inf'):
-                continue
+            """if job.transfert_time == float('inf') or job.execution_time == float('inf'):
+                continue"""
 
-            if job.transfert_time > job.execution_time and job.nb_task_not_lunched >= 2:
+            if job.transfert_time < job.execution_time and job.nb_task_not_lunched >= 2:
                 nb_job +=1
-                jobs_keys.append(job_id)
+            
+            jobs_keys.append(job_id)
         
         return nb_job, jobs_keys
 
