@@ -392,7 +392,7 @@ class JobInjector:
                 nb_job +=1
                 jobs_keys.append(job_id)
         
-        return nb_job, job
+        return nb_job, jobs_keys
 
     def nbAvailabelNodes(self):
         #Ordonner les keys 
