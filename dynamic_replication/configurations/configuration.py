@@ -145,7 +145,9 @@ class Configuration:
 
         print("storage restriction using redis for All nodes ")
         with self.enoslib.actions(roles=self.roles) as p: 
-            p.apt(name=['redis-server'],state="present",)
+            #p.apt(name=['redis-server'],state="present",)
+            p.command(task_name="installing redis", cmd="apt-get install redis")
+
             p.command(
                     task_name="Start redis with a pecifique config",
                     cmd=command, #f"redis-server --bind 0.0.0.0 --protected-mode no --maxmemory {storage}mb --port {self.db_listening_port}", 
