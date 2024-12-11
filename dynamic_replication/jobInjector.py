@@ -100,6 +100,9 @@ class JobInjector:
         i_job = 0
         inter_arrival_time = 2
         current_time = 0
+        """process = multiprocessing.Process(target=self.injectJobsOnProcess, args=(self.job_list))
+        process.start()"""
+
         while True:
             
             while j < len(self.job_list):
@@ -176,10 +179,40 @@ class JobInjector:
             if len(self.running_job.keys()) == 0 and self.index >= self.nb_arriving_job:
                 print("========= All jobs executed")
                 break
+        #process.join()
     
     def injectJobs(self, job_list):
 
         if self.index < self.nb_arriving_job:
+            a_time = int(time.time() - self.exp_start_time)
+            jobs = self.df_jobs[self.df_jobs["arriving_time"] == a_time]
+            if jobs.shape[0] != 0:
+                self.index += jobs.shape[0]
+                for i, row in jobs.iterrows():
+                    print(f"job {row['job_id']} arriving at {a_time} added at time {row['arriving_time']}")
+                    job = Job(
+                        arriving_time = time.time(),
+                        nb_task=int(row['nb_tasks']),
+                        execution_times=row['time'],
+                        id_dataset=self.id_dataset,
+                        size_dataset=row['dataset_size']
+                    )
+
+                    job.tasks_list = [Task(f'task_{i}', row['time'], self.id_dataset) for i in range(int(row['nb_tasks']))]
+
+                    self.jobs_list[self.nb_jobs] = job
+                    self.id_dataset +=1
+                    self.nb_jobs +=1
+                    job_list.append((self.nb_jobs, job))
+                print(len(self.job_list))
+            
+            self.df_jobs = self.df_jobs[self.df_jobs["arriving_time"] != a_time]
+        return self.job_list
+    
+
+    def injectJobsOnProcess(self, job_list):
+
+        while self.index < self.nb_arriving_job:
             a_time = int(time.time() - self.exp_start_time)
             jobs = self.df_jobs[self.df_jobs["arriving_time"] == a_time]
             if jobs.shape[0] != 0:
@@ -257,7 +290,8 @@ class JobInjector:
                         
                         #end = True
                 #t_time = transfertTime(BANDWIDTH, self.graphe_infos[self.id][task.host_node], job.size_dataset)       
-                if task.state == "Started" and time.time() - task.starting_time > job.transfert_time and not added and job.nb_task_not_lunched > 1: #and job.nb_replicas < MAX_REPLICA_NUMBER:
+                if task.state == "Started" and time.time() - task.starting_time > job.transfert_time and not added and ((job.nb_task_not_lunched > 1) or (job.nb_task_not_lunched == 1 and job.execution_time != float('inf') and job.transfert_time < (job.execution_time/2))): #and job.nb_replicas < MAX_REPLICA_NUMBER:
+                    
                     end = False
                     #t_time = transfertTime(BANDWIDTH, self.graphe_infos[self.id][task.host_node], job.size_dataset)
                     added = self.addNewTaskOnNewNode(job_id,job.transfert_time)
@@ -728,7 +762,7 @@ class JobInjector:
         
 if __name__ == "__main__":
 
-    data = {'IP_ADDRESS': '172.16.193.7', 'graphe_infos': [[ -1., 100., 100., 100., 100., 100., 100., 100., 100., 100., 100.],
+    data = {'IP_ADDRESS': '172.16.97.9', 'graphe_infos': [[ -1., 100., 100., 100., 100., 100., 100., 100., 100., 100., 100.],
        [100.,  -1., 100., 100., 100., 100., 100., 100., 100., 100., 100.],
        [100., 100.,  -1., 100., 100., 100., 100., 100., 100., 100., 100.],
        [100., 100., 100.,  -1., 100., 100., 100., 100., 100., 100., 100.],
@@ -738,7 +772,8 @@ if __name__ == "__main__":
        [100., 100., 100., 100., 100., 100., 100.,  -1., 100., 100., 100.],
        [100., 100., 100., 100., 100., 100., 100., 100.,  -1., 100., 100.],
        [100., 100., 100., 100., 100., 100., 100., 100., 100.,  -1., 100.],
-       [100., 100., 100., 100., 100., 100., 100., 100., 100., 100.,  -1.]], 'IPs_ADDRESS': ['172.16.193.2', '172.16.193.21', '172.16.193.22', '172.16.193.26', '172.16.193.27', '172.16.193.37', '172.16.193.40', '172.16.193.43', '172.16.193.46', '172.16.193.6'], 'infos': {0: {'latency': 100.0, 'id': 0, 'node_ip': '172.16.193.2', 'node_port': 8880}, 1: {'latency': 100.0, 'id': 1, 'node_ip': '172.16.193.21', 'node_port': 8881}, 2: {'latency': 100.0, 'id': 2, 'node_ip': '172.16.193.22', 'node_port': 8882}, 3: {'latency': 100.0, 'id': 3, 'node_ip': '172.16.193.26', 'node_port': 8883}, 4: {'latency': 100.0, 'id': 4, 'node_ip': '172.16.193.27', 'node_port': 8884}, 5: {'latency': 100.0, 'id': 5, 'node_ip': '172.16.193.37', 'node_port': 8885}, 6: {'latency': 100.0, 'id': 6, 'node_ip': '172.16.193.40', 'node_port': 8886}, 7: {'latency': 100.0, 'id': 7, 'node_ip': '172.16.193.43', 'node_port': 8887}, 8: {'latency': 100.0, 'id': 8, 'node_ip': '172.16.193.46', 'node_port': 8888}, 9: {'latency': 100.0, 'id': 9, 'node_ip': '172.16.193.6', 'node_port': 8889}}}
+       [100., 100., 100., 100., 100., 100., 100., 100., 100., 100.,  -1.]], 'IPs_ADDRESS': ['172.16.97.17', '172.16.97.19', '172.16.97.24', '172.16.97.25', '172.16.97.28', '172.16.97.3', '172.16.97.4', '172.16.97.5', '172.16.97.7', '172.16.97.8'], 'infos': {0: {'latency': 100.0, 'id': 0, 'node_ip': '172.16.97.17', 'node_port': 8880}, 1: {'latency': 100.0, 'id': 1, 'node_ip': '172.16.97.19', 'node_port': 8881}, 2: {'latency': 100.0, 'id': 2, 'node_ip': '172.16.97.24', 'node_port': 8882}, 3: {'latency': 100.0, 'id': 3, 'node_ip': '172.16.97.25', 'node_port': 8883}, 4: {'latency': 100.0, 'id': 4, 'node_ip': '172.16.97.28', 'node_port': 8884}, 5: {'latency': 100.0, 'id': 5, 'node_ip': '172.16.97.3', 'node_port': 8885}, 6: {'latency': 100.0, 'id': 6, 'node_ip': '172.16.97.4', 'node_port': 8886}, 7: {'latency': 100.0, 'id': 7, 'node_ip': '172.16.97.5', 'node_port': 8887}, 8: {'latency': 100.0, 'id': 8, 'node_ip': '172.16.97.7', 'node_port': 8888}, 9: {'latency': 100.0, 'id': 9, 'node_ip': '172.16.97.8', 'node_port': 8889}}}
+
 
 
 
