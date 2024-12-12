@@ -180,6 +180,7 @@ class JobInjector:
                 print("========= All jobs executed")
                 break
         #process.join()
+    
     def SimulateArrivingJobsWithMaxReplication(self):
         if not self.nodes_infos:
             return False
@@ -251,6 +252,7 @@ class JobInjector:
                     self.running_job[job_id] = job
                     j+=1
                     self.waiting_list.append((job_id, job))
+
                 self.reschedulOtherTasks()
 
             ##
@@ -267,7 +269,7 @@ class JobInjector:
             """
             
             ## inject n jobs
-            _ = self.injectJobs(self.job_list)
+            #_ = self.injectJobs(self.job_list)
             
             self.reschedulOtherTasks()
 
@@ -298,7 +300,7 @@ class JobInjector:
             end = True #False
             job = self.running_job[job_id]
             z = 0
-            while z < len(job.executing_tasks) and not added:
+            while z < len(job.executing_tasks):
                 i, task_id = job.executing_tasks[z]
                 task = job.tasks_list[i]
 
@@ -329,12 +331,26 @@ class JobInjector:
                             print(job.executing_tasks)
                         else:
                             print("didn't start")
-                    else:
+                    """else:
 
-                        job.ids_nodes.remove(task.host_node)
+                        job.ids_nodes.remove(task.host_node)"""
                         
                         #end = True
-                #t_time = transfertTime(BANDWIDTH, self.graphe_infos[self.id][task.host_node], job.size_dataset)       
+                #t_time = transfertTime(BANDWIDTH, self.graphe_infos[self.id][task.host_node], job.size_dataset)
+
+            for n_task in job.tasks_list:
+                if n_task.state == "NotStarted":          
+                    end = False
+                    #t_time = transfertTime(BANDWIDTH, self.graphe_infos[self.id][task.host_node], job.size_dataset)
+                    added = self.addNewTaskOnNewNode(job_id,job.transfert_time)
+
+                    if added: 
+                        #pass
+                        job.nb_replicas +=1
+                        job.nb_task_not_lunched -=1
+                        #This change thinks in this cas i only add one replica peer job
+                        print(f'une replica ajouter au job {job_id}')
+
                 """if task.state == "Started" and time.time() - task.starting_time > job.transfert_time and not added and job.nb_task_not_lunched > 1 and job.nb_replicas < MAX_REPLICA_NUMBER:
                     end = False
                     #t_time = transfertTime(BANDWIDTH, self.graphe_infos[self.id][task.host_node], job.size_dataset)
@@ -570,7 +586,7 @@ class JobInjector:
         return True  
 
     def orderJobs(self):
-        
+        return [key for key in self.running_job.keys()]
         jobs = copy.deepcopy(self.running_job)
         nb_jobs, jobs_ids = self.nbJobsToReplicat()
         nb_availabel_nodes = self.nbAvailabelNodes()
@@ -964,8 +980,7 @@ if __name__ == "__main__":
        [100., 100., 100., 100., 100., 100., 100.,  -1., 100., 100., 100.],
        [100., 100., 100., 100., 100., 100., 100., 100.,  -1., 100., 100.],
        [100., 100., 100., 100., 100., 100., 100., 100., 100.,  -1., 100.],
-       [100., 100., 100., 100., 100., 100., 100., 100., 100., 100.,  -1.]], 'IPs_ADDRESS': ['172.16.97.12', '172.16.97.13', '172.16.97.15', '172.16.97.17', '172.16.97.22', '172.16.97.24', '172.16.97.25', '172.16.97.28', '172.16.97.3', '172.16.97.8'], 'infos': {0: {'latency': 100.0, 'id': 0, 'node_ip': '172.16.97.12', 'node_port': 8880}, 1: {'latency': 100.0, 'id': 1, 'node_ip': '172.16.97.13', 'node_port': 8881}, 2: {'latency': 100.0, 'id': 2, 'node_ip': '172.16.97.15', 'node_port': 8882}, 3: {'latency': 100.0, 'id': 3, 'node_ip': '172.16.97.17', 'node_port': 8883}, 4: {'latency': 100.0, 'id': 4, 'node_ip': '172.16.97.22', 'node_port': 8884}, 5: {'latency': 100.0, 'id': 5, 'node_ip': '172.16.97.24', 'node_port': 8885}, 6: {'latency': 100.0, 'id': 6, 'node_ip': '172.16.97.25', 'node_port': 8886}, 7: {'latency': 100.0, 'id': 7, 'node_ip': '172.16.97.28', 'node_port': 8887}, 8: {'latency': 100.0, 'id': 8, 'node_ip': '172.16.97.3', 'node_port': 8888}, 9: {'latency': 100.0, 'id': 9, 'node_ip': '172.16.97.8', 'node_port': 8889}}}
-
+       [100., 100., 100., 100., 100., 100., 100., 100., 100., 100.,  -1.]], 'IPs_ADDRESS': ['172.16.97.15', '172.16.97.17', '172.16.97.22', '172.16.97.24', '172.16.97.25', '172.16.97.28', '172.16.97.3', '172.16.97.4', '172.16.97.6', '172.16.97.8'], 'infos': {0: {'latency': 100.0, 'id': 0, 'node_ip': '172.16.97.15', 'node_port': 8880}, 1: {'latency': 100.0, 'id': 1, 'node_ip': '172.16.97.17', 'node_port': 8881}, 2: {'latency': 100.0, 'id': 2, 'node_ip': '172.16.97.22', 'node_port': 8882}, 3: {'latency': 100.0, 'id': 3, 'node_ip': '172.16.97.24', 'node_port': 8883}, 4: {'latency': 100.0, 'id': 4, 'node_ip': '172.16.97.25', 'node_port': 8884}, 5: {'latency': 100.0, 'id': 5, 'node_ip': '172.16.97.28', 'node_port': 8885}, 6: {'latency': 100.0, 'id': 6, 'node_ip': '172.16.97.3', 'node_port': 8886}, 7: {'latency': 100.0, 'id': 7, 'node_ip': '172.16.97.4', 'node_port': 8887}, 8: {'latency': 100.0, 'id': 8, 'node_ip': '172.16.97.6', 'node_port': 8888}, 9: {'latency': 100.0, 'id': 9, 'node_ip': '172.16.97.8', 'node_port': 8889}}}
 
 
     job_injector = JobInjector(
