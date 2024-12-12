@@ -190,7 +190,7 @@ class JobInjector:
         job_id, job = self.generateJob()
         self.waiting_list.append((job_id,job))"""
         self.job_list = []
-        #job_list = self.staticJobsFromJSON()#self.staticJobs()#
+        self.job_list = self.staticJobsFromJSON()#self.staticJobs()#
         j = 0
         i_job = 0
         inter_arrival_time = 2
@@ -978,7 +978,7 @@ if __name__ == "__main__":
     
     
     job_injector.nodes_infos = data["infos"]
-    job_injector.SimulateArrivingJobs()
+    job_injector.SimulateArrivingJobsWithMaxReplication()
                 
             
 
