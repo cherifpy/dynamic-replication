@@ -269,7 +269,7 @@ class JobInjector:
             """
             
             ## inject n jobs
-            #_ = self.injectJobs(self.job_list)
+            _ = self.injectJobs(self.job_list)
             
             self.reschedulOtherTasks()
 
@@ -337,6 +337,8 @@ class JobInjector:
                         
                         #end = True
                 #t_time = transfertTime(BANDWIDTH, self.graphe_infos[self.id][task.host_node], job.size_dataset)
+                z+=1  
+
 
             for n_task in job.tasks_list:
                 if n_task.state == "NotStarted":          
@@ -362,7 +364,7 @@ class JobInjector:
                         job.nb_task_not_lunched -=1
                         #This change thinks in this cas i only add one replica peer job
                         print(f'une replica ajouter au job {job_id}')"""
-                z+=1       
+                 
 
             if end: delete.append(job_id)
 
