@@ -180,7 +180,113 @@ class JobInjector:
                 print("========= All jobs executed")
                 break
         #process.join()
+    def SimulateArrivingJobsWithMaxReplication(self):
+        if not self.nodes_infos:
+            return False
+        self.exp_start_time = time.time()
+        """job_id, job = self.generateJob()
+        self.waiting_list.append((job_id,job))
+
+        job_id, job = self.generateJob()
+        self.waiting_list.append((job_id,job))"""
+        self.job_list = []
+        #job_list = self.staticJobsFromJSON()#self.staticJobs()#
+        j = 0
+        i_job = 0
+        inter_arrival_time = 2
+        current_time = 0
+        """process = multiprocessing.Process(target=self.injectJobsOnProcess, args=(self.job_list))
+        process.start()"""
+
+        while True:
+            
+            while j < len(self.job_list):
+                job_started = False
+                
+                job_id, job = self.job_list[j]
+                
+                self.dataset_counter += 1
+                
+                host_nodes = self.AllNodesNeeded(job)
+                
+                host_with_replica = []
+
+                for i, host in enumerate(host_nodes):
+                    
+                    r, t_transfert = self.replicate(host, job_id, job.id_dataset, job.size_dataset)
+                    if r: 
+                        job.nb_replicas +=1
+                        job.job_starting_time = time.time()
+                        print(f"{i+1} Replica sended")
+                        self.writeOutput(f"Replica of dataset {job.id_dataset} sended to {host}")
+                        host_with_replica.append(host)
+                        t_start = time.time()
+                        job.transfert_time = transfertTime(BANDWIDTH, 100, job.size_dataset)
+                        self.wrtieStatsOnTasks(f"{-1},{job_id},{host},{t_start},{t_start + job.transfert_time},{job.transfert_time},{job.id_dataset}")
+                        #self.wrtieStatsOnTasks(f"{job_id},{task.task_id},{task.host_node},{task.starting_time},{task.execution_time + task.starting_time},{task.execution_time},{task.id_dataset}")
+                    else: 
+                        print("no replica sended")
+
+                for i,host in enumerate(host_with_replica):
+                    
+                    rep, latency = self.sendTaskToNode(host, job_id, job.tasks_list[i].execution_time,job.id_dataset)
+                    if rep['started']:
+                        
+                        self.writeOutput(f"Job {job_id} started")
+                        self.writeOutput(f"Task {i} of job {job_id} started on node {host}")
+                        print("========= Job started")
+                        print(f"========= Task of job {job_id} started on node {host}")
+                        job.tasks_list[i].starting_time = rep['starting_time']+job.transfert_time
+                        job.tasks_list[i].host_node = host
+                        job.tasks_list[i].executed = True
+                        job.tasks_list[i].state = "Started"
+                        job.executing_tasks.append((i, job.tasks_list[i].task_id))
+                        self.running_tasks.append((job_id, job.tasks_list[i].task_id, job.tasks_list[i].starting_time, job.tasks_list[i].execution_time, job.tasks_list[i].host_node))
+                        job.ids_nodes.append(host)
+                        job_started = True
+                        job.starting_times.append(rep['starting_time'])
+                        job.nb_task_not_lunched -=1
+                        
+                if job_started:
+                    self.running_job[job_id] = job
+                    j+=1
+                    self.waiting_list.append((job_id, job))
+                self.replicateWithInjectingJobs()
+
+            ##
+            #Injecting jobs to the waiting list
+            """if time.time() - current_time > inter_arrival_time:
+                if time.time() - self.exp_start_time < MAX_TIME_EXP*60:
+                    for i in range(random.randint(1,4)):
+                        new_job_id, new_job = self.generateJob()
+                        job_list.append((new_job_id, new_job))
+                    inter_arrival_time = random.expovariate(lambda_rate)
+                    current_time = time.time()
+                    print("========= new job arrived")
+                    i_job +=1
+            """
+            
+            ## inject n jobs
+            _ = self.injectJobs(self.job_list)
+            
+            self.replicateWithInjectingJobs()
+
+            if len(self.running_job.keys()) == 0 and self.index >= self.nb_arriving_job:
+                print("========= All jobs executed")
+                break
+        #process.join()
+
+    def AllNodesNeeded(self,job:Job):
+        availabel_nodes = self.getAvailabledNodes()
+        if len(availabel_nodes) < job.nb_task:
+            return copy.deepcopy(availabel_nodes)
+
+        return copy.deepcopy(random.sample(availabel_nodes, job.nb_task))
+
     
+    def reschedulOtherTasks(self):
+        pass
+
     def injectJobs(self, job_list):
 
         if self.index < self.nb_arriving_job:
@@ -396,10 +502,24 @@ class JobInjector:
         jobs = copy.deepcopy(self.running_job)
         nb_jobs, jobs_ids = self.nbJobsToReplicat()
         nb_availabel_nodes = self.nbAvailabelNodes()
+
+        sorted_keys =[]
+        jobs_objcts = []
         
-        if nb_availabel_nodes >= nb_jobs:
+        for key in self.running_job.keys():
+            job = self.running_job[key]
+            objective = job.execution_time
+            
+            jobs_objcts.append((key, objective))
+
+        sorted_keys = [t[0] for t in sorted(jobs_objcts, key=lambda k:k[1], reverse=True)]
+        return sorted_keys      
+        
+        """if nb_availabel_nodes >= nb_jobs:
             return jobs_ids
         
+        
+
         if nb_availabel_nodes < nb_jobs: # condition a changer
             sorted_keys =[]
             jobs_objcts = []
@@ -416,7 +536,7 @@ class JobInjector:
         
         #return sorted(self.running_job.keys(), key=lambda k: self.running_job[k].execution_time*self.running_job[k].execution_time, reverse=False)
         
-        return jobs_ids
+        return jobs_ids"""
 
     def nbJobsToReplicat(self):
         nb_job = 0
@@ -772,8 +892,7 @@ if __name__ == "__main__":
        [100., 100., 100., 100., 100., 100., 100.,  -1., 100., 100., 100.],
        [100., 100., 100., 100., 100., 100., 100., 100.,  -1., 100., 100.],
        [100., 100., 100., 100., 100., 100., 100., 100., 100.,  -1., 100.],
-       [100., 100., 100., 100., 100., 100., 100., 100., 100., 100.,  -1.]], 'IPs_ADDRESS': ['172.16.97.17', '172.16.97.19', '172.16.97.24', '172.16.97.25', '172.16.97.28', '172.16.97.3', '172.16.97.4', '172.16.97.5', '172.16.97.7', '172.16.97.8'], 'infos': {0: {'latency': 100.0, 'id': 0, 'node_ip': '172.16.97.17', 'node_port': 8880}, 1: {'latency': 100.0, 'id': 1, 'node_ip': '172.16.97.19', 'node_port': 8881}, 2: {'latency': 100.0, 'id': 2, 'node_ip': '172.16.97.24', 'node_port': 8882}, 3: {'latency': 100.0, 'id': 3, 'node_ip': '172.16.97.25', 'node_port': 8883}, 4: {'latency': 100.0, 'id': 4, 'node_ip': '172.16.97.28', 'node_port': 8884}, 5: {'latency': 100.0, 'id': 5, 'node_ip': '172.16.97.3', 'node_port': 8885}, 6: {'latency': 100.0, 'id': 6, 'node_ip': '172.16.97.4', 'node_port': 8886}, 7: {'latency': 100.0, 'id': 7, 'node_ip': '172.16.97.5', 'node_port': 8887}, 8: {'latency': 100.0, 'id': 8, 'node_ip': '172.16.97.7', 'node_port': 8888}, 9: {'latency': 100.0, 'id': 9, 'node_ip': '172.16.97.8', 'node_port': 8889}}}
-
+       [100., 100., 100., 100., 100., 100., 100., 100., 100., 100.,  -1.]], 'IPs_ADDRESS': ['172.16.97.12', '172.16.97.13', '172.16.97.15', '172.16.97.17', '172.16.97.22', '172.16.97.24', '172.16.97.25', '172.16.97.28', '172.16.97.3', '172.16.97.8'], 'infos': {0: {'latency': 100.0, 'id': 0, 'node_ip': '172.16.97.12', 'node_port': 8880}, 1: {'latency': 100.0, 'id': 1, 'node_ip': '172.16.97.13', 'node_port': 8881}, 2: {'latency': 100.0, 'id': 2, 'node_ip': '172.16.97.15', 'node_port': 8882}, 3: {'latency': 100.0, 'id': 3, 'node_ip': '172.16.97.17', 'node_port': 8883}, 4: {'latency': 100.0, 'id': 4, 'node_ip': '172.16.97.22', 'node_port': 8884}, 5: {'latency': 100.0, 'id': 5, 'node_ip': '172.16.97.24', 'node_port': 8885}, 6: {'latency': 100.0, 'id': 6, 'node_ip': '172.16.97.25', 'node_port': 8886}, 7: {'latency': 100.0, 'id': 7, 'node_ip': '172.16.97.28', 'node_port': 8887}, 8: {'latency': 100.0, 'id': 8, 'node_ip': '172.16.97.3', 'node_port': 8888}, 9: {'latency': 100.0, 'id': 9, 'node_ip': '172.16.97.8', 'node_port': 8889}}}
 
 
 
