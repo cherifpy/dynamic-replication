@@ -241,49 +241,49 @@ class JobInjector:
                 job_started = True
                 job_id, job = self.job_list[j]
                 self.dataset_counter += 1
-                host_nodes = self.AllNodesNeeded(job)
+                host_nodes = self.AllAvailableNodes(job)
                 host_with_replica = []
-                if len(host_nodes) != 0 and len(host_nodes) == job.nb_task:
-                    for i, host in enumerate(host_nodes):
+                
+                for i, host in enumerate(host_nodes):
+                    
+                    r, t_transfert = self.replicateForAllNode(host, job_id, job.id_dataset, job.size_dataset)
+                    if r: 
+                        job.nb_replicas +=1
+                        job.job_starting_time = time.time()
+                        print(f"{i+1} Replica sended")
+                        self.writeOutput(f"Replica of dataset {job.id_dataset} sended to {host}")
+                        host_with_replica.append(host)
+                        t_start = time.time()
+                        if job.transfert_time == float("inf"):
+                            job.transfert_time = transfertTime(BANDWIDTH, 100, job.size_dataset)
+                        self.wrtieStatsOnTasks(f"{-1},{job_id},{host},{t_start},{t_start + job.transfert_time},{job.transfert_time},{job.id_dataset}")
+                    else: 
+                        print("no replica sended")
+                for i,host in enumerate(host_with_replica):
+                    
+                    rep, latency = self.sendTaskToNode(host, job_id, job.tasks_list[i].execution_time,job.id_dataset)
+                    if rep['started']:
                         
-                        r, t_transfert = self.replicateForAllNode(host, job_id, job.id_dataset, job.size_dataset)
-                        if r: 
-                            job.nb_replicas +=1
-                            job.job_starting_time = time.time()
-                            print(f"{i+1} Replica sended")
-                            self.writeOutput(f"Replica of dataset {job.id_dataset} sended to {host}")
-                            host_with_replica.append(host)
-                            t_start = time.time()
-                            if job.transfert_time == float("inf"):
-                                job.transfert_time = transfertTime(BANDWIDTH, 100, job.size_dataset)
-                            self.wrtieStatsOnTasks(f"{-1},{job_id},{host},{t_start},{t_start + job.transfert_time},{job.transfert_time},{job.id_dataset}")
-                        else: 
-                            print("no replica sended")
-                    for i,host in enumerate(host_nodes):
-                        
-                        rep, latency = self.sendTaskToNode(host, job_id, job.tasks_list[i].execution_time,job.id_dataset)
-                        if rep['started']:
+                        self.writeOutput(f"Job {job_id} started")
+                        self.writeOutput(f"Task {i} of job {job_id} started on node {host}")
+                        print("========= Job started")
+                        print(f"========= Task of job {job_id} started on node {host}")
+                        job.tasks_list[i].starting_time = rep['starting_time']+job.transfert_time
+                        job.tasks_list[i].host_node = host
+                        job.tasks_list[i].executed = True
+                        job.tasks_list[i].state = "Started"
+                        job.executing_tasks.append((i, job.tasks_list[i].task_id))
+                        self.running_tasks.append((job_id, job.tasks_list[i].task_id, job.tasks_list[i].starting_time, job.tasks_list[i].execution_time, job.tasks_list[i].host_node))
+                        job.ids_nodes.append(host)
+                        job.starting_times.append(rep['starting_time'])
+                        job.nb_task_not_lunched -=1
+                    else:
+                        job_started=False
                             
-                            self.writeOutput(f"Job {job_id} started")
-                            self.writeOutput(f"Task {i} of job {job_id} started on node {host}")
-                            print("========= Job started")
-                            print(f"========= Task of job {job_id} started on node {host}")
-                            job.tasks_list[i].starting_time = rep['starting_time']+job.transfert_time
-                            job.tasks_list[i].host_node = host
-                            job.tasks_list[i].executed = True
-                            job.tasks_list[i].state = "Started"
-                            job.executing_tasks.append((i, job.tasks_list[i].task_id))
-                            self.running_tasks.append((job_id, job.tasks_list[i].task_id, job.tasks_list[i].starting_time, job.tasks_list[i].execution_time, job.tasks_list[i].host_node))
-                            job.ids_nodes.append(host)
-                            job.starting_times.append(rep['starting_time'])
-                            job.nb_task_not_lunched -=1
-                        else:
-                            job_started=False
-                            
-                    if job_started:
-                        self.running_job[job_id] = job
-                        j+=1
-                        self.waiting_list.append((job_id, job))
+                if job_started:
+                    self.running_job[job_id] = job
+                    j+=1
+                    self.waiting_list.append((job_id, job))
 
                 self.startOtherTasksWithoutReplication()
 
@@ -291,7 +291,7 @@ class JobInjector:
             
             self.startOtherTasksWithoutReplication()
 
-            if len(self.running_job.keys()) == 0 and self.index >= self.nb_arriving_job:
+            if len(self.job_executed) == self.nb_arriving_job:
                 print("========= All jobs executed")
                 break
 
@@ -304,6 +304,13 @@ class JobInjector:
             return copy.deepcopy(availabel_nodes)
         else: 
             return []
+    
+    def AllAvailableNodes(self,job:Job):
+        availabel_nodes = self.getAvailabledNodes()
+        if len(availabel_nodes) >  job.nb_task:
+            return copy.deepcopy(random.sample(availabel_nodes, job.nb_task))
+        elif len(availabel_nodes) <= job.nb_task:
+            return copy.deepcopy(availabel_nodes)
 
     
     def reschedulOtherTasks(self):
