@@ -143,11 +143,11 @@ class JobInjector:
                     self.running_job[job_id] = job
                     self.waiting_list.append((job_id, job))
                     j+=1
-                self.replicateWithInjectingJobs()
+                self.startOtherTasksWithoutReplication()
 
             ## inject n jobs
             _ = self.injectJobs(self.job_list)
-            self.replicateWithInjectingJobs()
+            self.startOtherTasksWithoutReplication()
             if len(self.running_job.keys()) == 0 and self.index >= self.nb_arriving_job:
                 print("========= All jobs executed")
                 break
