@@ -158,36 +158,23 @@ class JobInjector:
         if not self.nodes_infos:
             return False
         self.exp_start_time = time.time()
-        """job_id, job = self.generateJob()
-        self.waiting_list.append((job_id,job))
-
-        job_id, job = self.generateJob()
-        self.waiting_list.append((job_id,job))"""
         self.job_list = []
-        #self.job_list = self.staticJobsFromJSON()#self.staticJobs()#
         j = 0
         i_job = 0
         inter_arrival_time = 2
         current_time = 0
-        """process = multiprocessing.Process(target=self.injectJobsOnProcess, args=(self.job_list))
-        process.start()"""
-
         while True:
             
             while j < len(self.job_list):
-                job_started = False
-                
+                job_started = True
                 job_id, job = self.job_list[j]
-                
                 self.dataset_counter += 1
-                
                 host_nodes = self.AllNodesNeeded(job)
-                
                 host_with_replica = []
 
-                for i, host in enumerate(host_nodes):
+                for i, host in enumerate([i for i in range(self.nb_nodes)]):
                     
-                    r, t_transfert = self.replicate(host, job_id, job.id_dataset, job.size_dataset)
+                    r, t_transfert = self.replicateForAllNode(host, job_id, job.id_dataset, job.size_dataset)
                     if r: 
                         job.nb_replicas +=1
                         job.job_starting_time = time.time()
@@ -201,7 +188,7 @@ class JobInjector:
                     else: 
                         print("no replica sended")
 
-                for i,host in enumerate(host_with_replica):
+                for i,host in enumerate(job.nb_task):
                     
                     rep, latency = self.sendTaskToNode(host, job_id, job.tasks_list[i].execution_time,job.id_dataset)
                     if rep['started']:
@@ -217,40 +204,26 @@ class JobInjector:
                         job.executing_tasks.append((i, job.tasks_list[i].task_id))
                         self.running_tasks.append((job_id, job.tasks_list[i].task_id, job.tasks_list[i].starting_time, job.tasks_list[i].execution_time, job.tasks_list[i].host_node))
                         job.ids_nodes.append(host)
-                        job_started = True
                         job.starting_times.append(rep['starting_time'])
                         job.nb_task_not_lunched -=1
+                    else:
+                        job_started=False
                         
                 if job_started:
                     self.running_job[job_id] = job
                     j+=1
                     self.waiting_list.append((job_id, job))
 
-                self.startOtherTasksWithoutReplication()
+                #self.startOtherTasksWithoutReplication()
 
-            ##
-            #Injecting jobs to the waiting list
-            """
-            if time.time() - current_time > inter_arrival_time:
-                if time.time() - self.exp_start_time < MAX_TIME_EXP*60:
-                    for i in range(random.randint(1,4)):
-                        new_job_id, new_job = self.generateJob()
-                        job_list.append((new_job_id, new_job))
-                    inter_arrival_time = random.expovariate(lambda_rate)
-                    current_time = time.time()
-                    print("========= new job arrived")
-                    i_job +=1
-            """
-            
-            ## inject n jobs
             _ = self.injectJobs(self.job_list)
             
-            self.startOtherTasksWithoutReplication()
+            #self.startOtherTasksWithoutReplication()
 
             if len(self.running_job.keys()) == 0 and self.index >= self.nb_arriving_job:
                 print("========= All jobs executed")
                 break
-        #process.join()
+
 
     def AllNodesNeeded(self,job:Job):
         availabel_nodes = self.getAvailabledNodes()
@@ -929,7 +902,21 @@ class JobInjector:
             cost = self.transfertCost(self.graphe_infos[self.id][host], ds_size)
             #self.writeTransfert(f"{job_id},{id_dataset},{self.id},{host},{ds_size},{cost},transfert1\n")
         return added,t_transfert
-            
+
+
+    def replicateForAllNode(self, host,job_id, id_dataset, ds_size):
+        #Cette fonction juste pour replique sur tout les noeds 
+        node_ip = self.nodes_infos[int(host)]["node_ip"]
+        t_start = time.time()
+        added = True 
+
+        t_transfert = time.time() - t_start
+        print(f"temps de transfert {t_transfert}")
+        
+        if added:
+            self.nb_data_trasnfert +=1
+            cost = self.transfertCost(self.graphe_infos[self.id][host], ds_size)
+        return added,t_transfert     
     
     def sendDataSet(self,id_node, ip_node, id_ds, ds_size):
 
@@ -1027,7 +1014,7 @@ if __name__ == "__main__":
     
     
     job_injector.nodes_infos = data["infos"]
-    job_injector.SimulateArrivingJobs()
+    job_injector.SimulateArrivingJobsWithMaxReplication()
                 
             
 
