@@ -169,7 +169,7 @@ class JobInjector:
                 job_started = True
                 job_id, job = self.job_list[j]
                 self.dataset_counter += 1
-                host_nodes = self.AllNodesNeeded(job)
+                #host_nodes = self.AllNodesNeeded(job)
                 host_with_replica = []
 
                 for i, host in enumerate([i for i in range(self.nb_nodes)]):
@@ -182,13 +182,13 @@ class JobInjector:
                         self.writeOutput(f"Replica of dataset {job.id_dataset} sended to {host}")
                         host_with_replica.append(host)
                         t_start = time.time()
-                        job.transfert_time = transfertTime(BANDWIDTH, 100, job.size_dataset)
+                        if job.trasnfert_time == float("inf"):
+                            job.transfert_time = transfertTime(BANDWIDTH, 100, job.size_dataset)
                         self.wrtieStatsOnTasks(f"{-1},{job_id},{host},{t_start},{t_start + job.transfert_time},{job.transfert_time},{job.id_dataset}")
-                        #self.wrtieStatsOnTasks(f"{job_id},{task.task_id},{task.host_node},{task.starting_time},{task.execution_time + task.starting_time},{task.execution_time},{task.id_dataset}")
                     else: 
                         print("no replica sended")
 
-                for i,host in enumerate(job.nb_task):
+                for i,host in range(job.nb_task):
                     
                     rep, latency = self.sendTaskToNode(host, job_id, job.tasks_list[i].execution_time,job.id_dataset)
                     if rep['started']:
