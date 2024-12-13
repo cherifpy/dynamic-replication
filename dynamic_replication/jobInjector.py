@@ -89,35 +89,24 @@ class JobInjector:
         if not self.nodes_infos:
             return False
         self.exp_start_time = time.time()
-        """job_id, job = self.generateJob()
-        self.waiting_list.append((job_id,job))
 
-        job_id, job = self.generateJob()
-        self.waiting_list.append((job_id,job))"""
         self.job_list = []
-        self.job_list = self.staticJobsFromJSON()#self.staticJobs()#
         j = 0
         i_job = 0
         inter_arrival_time = 2
         current_time = 0
-        """process = multiprocessing.Process(target=self.injectJobsOnProcess, args=(self.job_list))
-        process.start()"""
 
         while True:
             
             while j < len(self.job_list):
-                job_started = False
-                
+
+                job_started = False                
                 job_id, job = self.job_list[j]
-                
-                self.dataset_counter += 1
-                
-                host_nodes = self.selectHostsNodes()
-                
+                self.dataset_counter += 1                
+                host_nodes = self.selectHostsNodes()                
                 host_with_replica = []
 
                 for i, host in enumerate(host_nodes):
-                    
                     r, t_transfert = self.replicate(host, job_id, job.id_dataset, job.size_dataset)
                     if r: 
                         job.nb_replicas +=1
@@ -133,7 +122,6 @@ class JobInjector:
                         print("no replica sended")
 
                 for i,host in enumerate(host_with_replica):
-                    
                     rep, latency = self.sendTaskToNode(host, job_id, job.tasks_list[i].execution_time,job.id_dataset)
                     if rep['started']:
                         
@@ -154,33 +142,19 @@ class JobInjector:
                         
                 if job_started:
                     self.running_job[job_id] = job
-                    j+=1
                     self.waiting_list.append((job_id, job))
+                    j+=1
                 self.replicateWithInjectingJobs()
 
-            ##
-            #Injecting jobs to the waiting list
-            """if time.time() - current_time > inter_arrival_time:
-                if time.time() - self.exp_start_time < MAX_TIME_EXP*60:
-                    for i in range(random.randint(1,4)):
-                        new_job_id, new_job = self.generateJob()
-                        job_list.append((new_job_id, new_job))
-                    inter_arrival_time = random.expovariate(lambda_rate)
-                    current_time = time.time()
-                    print("========= new job arrived")
-                    i_job +=1
-            """
-            
             ## inject n jobs
-            #_ = self.injectJobs(self.job_list)
-            
+            _ = self.injectJobs(self.job_list)
             self.replicateWithInjectingJobs()
-
             if len(self.running_job.keys()) == 0 and self.index >= self.nb_arriving_job:
                 print("========= All jobs executed")
                 break
-        #process.join()
-    
+
+        print(j, len(self.job_list))
+
     def SimulateArrivingJobsWithMaxReplication(self):
         if not self.nodes_infos:
             return False
@@ -191,7 +165,7 @@ class JobInjector:
         job_id, job = self.generateJob()
         self.waiting_list.append((job_id,job))"""
         self.job_list = []
-        self.job_list = self.staticJobsFromJSON()#self.staticJobs()#
+        #self.job_list = self.staticJobsFromJSON()#self.staticJobs()#
         j = 0
         i_job = 0
         inter_arrival_time = 2
@@ -257,7 +231,8 @@ class JobInjector:
 
             ##
             #Injecting jobs to the waiting list
-            """if time.time() - current_time > inter_arrival_time:
+            """
+            if time.time() - current_time > inter_arrival_time:
                 if time.time() - self.exp_start_time < MAX_TIME_EXP*60:
                     for i in range(random.randint(1,4)):
                         new_job_id, new_job = self.generateJob()
@@ -381,7 +356,7 @@ class JobInjector:
 
         if self.index < self.nb_arriving_job:
             a_time = int(time.time() - self.exp_start_time)
-            jobs = self.df_jobs[self.df_jobs["arriving_time"] == a_time]
+            jobs = self.df_jobs[self.df_jobs["arriving_time"] <= a_time]
             if jobs.shape[0] != 0:
                 self.index += jobs.shape[0]
                 for i, row in jobs.iterrows():
@@ -402,7 +377,7 @@ class JobInjector:
                     job_list.append((self.nb_jobs, job))
                 print(len(self.job_list))
             
-            self.df_jobs = self.df_jobs[self.df_jobs["arriving_time"] != a_time]
+                self.df_jobs = self.df_jobs[self.df_jobs["arriving_time"] > a_time]
         return self.job_list
     
 
@@ -982,8 +957,7 @@ if __name__ == "__main__":
        [100., 100., 100., 100., 100., 100., 100.,  -1., 100., 100., 100.],
        [100., 100., 100., 100., 100., 100., 100., 100.,  -1., 100., 100.],
        [100., 100., 100., 100., 100., 100., 100., 100., 100.,  -1., 100.],
-       [100., 100., 100., 100., 100., 100., 100., 100., 100., 100.,  -1.]], 'IPs_ADDRESS': ['172.16.97.15', '172.16.97.17', '172.16.97.22', '172.16.97.24', '172.16.97.25', '172.16.97.28', '172.16.97.3', '172.16.97.4', '172.16.97.6', '172.16.97.8'], 'infos': {0: {'latency': 100.0, 'id': 0, 'node_ip': '172.16.97.15', 'node_port': 8880}, 1: {'latency': 100.0, 'id': 1, 'node_ip': '172.16.97.17', 'node_port': 8881}, 2: {'latency': 100.0, 'id': 2, 'node_ip': '172.16.97.22', 'node_port': 8882}, 3: {'latency': 100.0, 'id': 3, 'node_ip': '172.16.97.24', 'node_port': 8883}, 4: {'latency': 100.0, 'id': 4, 'node_ip': '172.16.97.25', 'node_port': 8884}, 5: {'latency': 100.0, 'id': 5, 'node_ip': '172.16.97.28', 'node_port': 8885}, 6: {'latency': 100.0, 'id': 6, 'node_ip': '172.16.97.3', 'node_port': 8886}, 7: {'latency': 100.0, 'id': 7, 'node_ip': '172.16.97.4', 'node_port': 8887}, 8: {'latency': 100.0, 'id': 8, 'node_ip': '172.16.97.6', 'node_port': 8888}, 9: {'latency': 100.0, 'id': 9, 'node_ip': '172.16.97.8', 'node_port': 8889}}}
-
+       [100., 100., 100., 100., 100., 100., 100., 100., 100., 100.,  -1.]], 'IPs_ADDRESS': ['172.16.97.15', '172.16.97.17', '172.16.97.19', '172.16.97.27', '172.16.97.3', '172.16.97.4', '172.16.97.5', '172.16.97.6', '172.16.97.7', '172.16.97.8'], 'infos': {0: {'latency': 100.0, 'id': 0, 'node_ip': '172.16.97.15', 'node_port': 8880}, 1: {'latency': 100.0, 'id': 1, 'node_ip': '172.16.97.17', 'node_port': 8881}, 2: {'latency': 100.0, 'id': 2, 'node_ip': '172.16.97.19', 'node_port': 8882}, 3: {'latency': 100.0, 'id': 3, 'node_ip': '172.16.97.27', 'node_port': 8883}, 4: {'latency': 100.0, 'id': 4, 'node_ip': '172.16.97.3', 'node_port': 8884}, 5: {'latency': 100.0, 'id': 5, 'node_ip': '172.16.97.4', 'node_port': 8885}, 6: {'latency': 100.0, 'id': 6, 'node_ip': '172.16.97.5', 'node_port': 8886}, 7: {'latency': 100.0, 'id': 7, 'node_ip': '172.16.97.6', 'node_port': 8887}, 8: {'latency': 100.0, 'id': 8, 'node_ip': '172.16.97.7', 'node_port': 8888}, 9: {'latency': 100.0, 'id': 9, 'node_ip': '172.16.97.8', 'node_port': 8889}}}
 
     job_injector = JobInjector(
         nb_nodes = NB_NODES,
@@ -995,7 +969,7 @@ if __name__ == "__main__":
     
     
     job_injector.nodes_infos = data["infos"]
-    job_injector.SimulateArrivingJobsWithMaxReplication()
+    job_injector.SimulateArrivingJobs()
                 
             
 
