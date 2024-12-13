@@ -163,6 +163,7 @@ class JobInjector:
         i_job = 0
         inter_arrival_time = 2
         current_time = 0
+        all_nodes = [i for i in range(self.nb_nodes)]
         while True:
             
             while j < len(self.job_list):
@@ -172,7 +173,7 @@ class JobInjector:
                 #host_nodes = self.AllNodesNeeded(job)
                 host_with_replica = []
 
-                for i, host in enumerate([i for i in range(self.nb_nodes)]):
+                for i, host in enumerate(all_nodes):
                     
                     r, t_transfert = self.replicateForAllNode(host, job_id, job.id_dataset, job.size_dataset)
                     if r: 
@@ -187,7 +188,7 @@ class JobInjector:
                         self.wrtieStatsOnTasks(f"{-1},{job_id},{host},{t_start},{t_start + job.transfert_time},{job.transfert_time},{job.id_dataset}")
                     else: 
                         print("no replica sended")
-                host_to_use = self.AllNodesNeeded(job)
+                host_to_use = copy.deepcopy(random.sample(all_nodes, job.nb_task))
                 for i,host in enumerate(host_to_use):
                     
                     rep, latency = self.sendTaskToNode(host, job_id, job.tasks_list[i].execution_time,job.id_dataset)
