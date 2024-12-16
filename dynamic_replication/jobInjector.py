@@ -530,7 +530,7 @@ class JobInjector:
             end = True #False
             job = self.running_job[job_id]
             z = 0
-            available_nodes = self.AllAvailableNodes()
+            nb_available_nodes = self.nbAvailabelNodes()
             while z < len(job.executing_tasks) and not added:
                 i, task_id = job.executing_tasks[z]
                 task = job.tasks_list[i]
@@ -565,7 +565,7 @@ class JobInjector:
                     else:
                         job.ids_nodes.remove(task.host_node)
 
-                if job.nb_task_not_lunched > 0 and len(available_nodes) != 0:
+                if job.nb_task_not_lunched > 0 and len(nb_available_nodes) != 0:
                     end = False
                     added = self.addNewTaskOnNewNode(job_id,job.transfert_time)
                     if added: 
@@ -573,7 +573,7 @@ class JobInjector:
                         job.nb_replicas +=1
                         job.nb_task_not_lunched -=1
                         print(f'une replica ajouter au job {job_id}')
-                        available_nodes = self.AllAvailableNodes()
+                        nb_available_nodes = self.nbAvailabelNodes()
                 z+=1       
 
             if end: delete.append(job_id)
