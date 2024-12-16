@@ -515,6 +515,77 @@ class JobInjector:
             self.historiques[id] = copy.deepcopy(self.running_job[id])
             del self.running_job[id]
         return True 
+    
+    def startOtherTaskIfNodeAvailabel(self):
+        """
+            dans cette fontion une tache est injectée si un noued et libre
+        """
+
+        delete = []
+        added = False
+        jobs_keys = self.orderJobs()
+        for job_id in jobs_keys:
+            
+            added = False
+            end = True #False
+            job = self.running_job[job_id]
+            z = 0
+            available_nodes = self.AllAvailableNodes()
+            while z < len(job.executing_tasks) and not added:
+                i, task_id = job.executing_tasks[z]
+                task = job.tasks_list[i]
+
+                if task.state != "Finished": end = False
+                if  task.state == "Started" and task.starting_time + task.execution_time < time.time():
+                    #end = False
+                    print(f"========= task on job {job_id} finished")
+                    self.writeOutput(f"Task {task.task_id} on job {job_id} finished")
+                    task.state = "Finished"
+                    job.execution_time = task.execution_time
+                    
+                    self.wrtieStatsOnTasks(f"{job_id},{task.task_id},{task.host_node},{task.starting_time},{task.execution_time + task.starting_time},{task.execution_time},{task.id_dataset},{job.transfert_time}")
+                    if job.nb_task_not_lunched > 0: 
+                        for n_task in job.tasks_list:
+                            if n_task.state == "NotStarted":
+                                new_task = n_task
+                                break
+                        rep, latency = self.sendTaskToNode(task.host_node,job_id,new_task.execution_time,job.id_dataset)
+                        if rep["started"]:
+                            job.executing_tasks.append((len(job.executing_tasks),new_task.task_id))
+                            job.nb_task_not_lunched -=1
+                            new_task.starting_time = rep['starting_time']
+                            new_task.state = "Started"
+                            new_task.host_node = task.host_node
+                            print(f"========= new task on job {job_id} started at node {task.host_node}")
+                            self.writeOutput(f"Task {new_task.task_id} of job {job_id} started on node {task.host_node}")
+                            self.running_tasks.append((job_id, new_task.task_id, new_task.starting_time, new_task.execution_time, new_task.host_node))
+                            print(job.executing_tasks)
+                        else:
+                            print("didn't start")
+                    else:
+                        job.ids_nodes.remove(task.host_node)
+
+                if job.nb_task_not_lunched > 0 and len(available_nodes) != 0:
+                    end = False
+                    added = self.addNewTaskOnNewNode(job_id,job.transfert_time)
+                    if added: 
+                        #pass
+                        job.nb_replicas +=1
+                        job.nb_task_not_lunched -=1
+                        print(f'une replica ajouter au job {job_id}')
+                z+=1       
+
+            if end: delete.append(job_id)
+
+        for id in delete :
+            print(f"========= job {id} finished")
+            job = self.running_job[id]
+            job.finishing_time = time.time()
+            self.writeStates(f"{job.id},{job.nb_task},{job.execution_time},{job.arriving_time},{job.job_starting_time},{job.finishing_time},{job.size_dataset},{job.transfert_time},{job.nb_replicas}")
+            self.historiques[id] = copy.deepcopy(self.running_job[id])
+            self.job_executed.append(id)
+            del self.running_job[id]
+        return True 
 
     def startOtherTasksWithoutReplication(self):
         """
@@ -1051,7 +1122,7 @@ class JobInjector:
         
 if __name__ == "__main__":
 
-    data = {'IP_ADDRESS': '172.16.97.9', 'graphe_infos':[[ -1., 100., 100., 100., 100., 100., 100., 100., 100., 100., 100.],
+    data = {'IP_ADDRESS': '172.16.97.8', 'graphe_infos': [[ -1., 100., 100., 100., 100., 100., 100., 100., 100., 100., 100.],
        [100.,  -1., 100., 100., 100., 100., 100., 100., 100., 100., 100.],
        [100., 100.,  -1., 100., 100., 100., 100., 100., 100., 100., 100.],
        [100., 100., 100.,  -1., 100., 100., 100., 100., 100., 100., 100.],
@@ -1061,7 +1132,8 @@ if __name__ == "__main__":
        [100., 100., 100., 100., 100., 100., 100.,  -1., 100., 100., 100.],
        [100., 100., 100., 100., 100., 100., 100., 100.,  -1., 100., 100.],
        [100., 100., 100., 100., 100., 100., 100., 100., 100.,  -1., 100.],
-       [100., 100., 100., 100., 100., 100., 100., 100., 100., 100.,  -1.]], 'IPs_ADDRESS': ['172.16.97.19', '172.16.97.22', '172.16.97.24', '172.16.97.27', '172.16.97.3', '172.16.97.4', '172.16.97.5', '172.16.97.6', '172.16.97.7', '172.16.97.8'], 'infos': {0: {'latency': 100.0, 'id': 0, 'node_ip': '172.16.97.19', 'node_port': 8880}, 1: {'latency': 100.0, 'id': 1, 'node_ip': '172.16.97.22', 'node_port': 8881}, 2: {'latency': 100.0, 'id': 2, 'node_ip': '172.16.97.24', 'node_port': 8882}, 3: {'latency': 100.0, 'id': 3, 'node_ip': '172.16.97.27', 'node_port': 8883}, 4: {'latency': 100.0, 'id': 4, 'node_ip': '172.16.97.3', 'node_port': 8884}, 5: {'latency': 100.0, 'id': 5, 'node_ip': '172.16.97.4', 'node_port': 8885}, 6: {'latency': 100.0, 'id': 6, 'node_ip': '172.16.97.5', 'node_port': 8886}, 7: {'latency': 100.0, 'id': 7, 'node_ip': '172.16.97.6', 'node_port': 8887}, 8: {'latency': 100.0, 'id': 8, 'node_ip': '172.16.97.7', 'node_port': 8888}, 9: {'latency': 100.0, 'id': 9, 'node_ip': '172.16.97.8', 'node_port': 8889}}}
+       [100., 100., 100., 100., 100., 100., 100., 100., 100., 100.,  -1.]], 'IPs_ADDRESS': ['172.16.97.12', '172.16.97.13', '172.16.97.2', '172.16.97.24', '172.16.97.25', '172.16.97.28', '172.16.97.3', '172.16.97.5', '172.16.97.6', '172.16.97.7'], 'infos': {0: {'latency': 100.0, 'id': 0, 'node_ip': '172.16.97.12', 'node_port': 8880}, 1: {'latency': 100.0, 'id': 1, 'node_ip': '172.16.97.13', 'node_port': 8881}, 2: {'latency': 100.0, 'id': 2, 'node_ip': '172.16.97.2', 'node_port': 8882}, 3: {'latency': 100.0, 'id': 3, 'node_ip': '172.16.97.24', 'node_port': 8883}, 4: {'latency': 100.0, 'id': 4, 'node_ip': '172.16.97.25', 'node_port': 8884}, 5: {'latency': 100.0, 'id': 5, 'node_ip': '172.16.97.28', 'node_port': 8885}, 6: {'latency': 100.0, 'id': 6, 'node_ip': '172.16.97.3', 'node_port': 8886}, 7: {'latency': 100.0, 'id': 7, 'node_ip': '172.16.97.5', 'node_port': 8887}, 8: {'latency': 100.0, 'id': 8, 'node_ip': '172.16.97.6', 'node_port': 8888}, 9: {'latency': 100.0, 'id': 9, 'node_ip': '172.16.97.7', 'node_port': 8889}}}
+    
     job_injector = JobInjector(
         nb_nodes = NB_NODES,
         graphe= data["graphe_infos"],
@@ -1072,7 +1144,7 @@ if __name__ == "__main__":
     
     
     job_injector.nodes_infos = data["infos"]
-    job_injector.SimulateArrivingJobsWithMaxReplication()
+    job_injector.SimulateArrivingJobsWithSemiDynamic()
                 
             
 
