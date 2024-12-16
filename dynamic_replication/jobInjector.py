@@ -238,7 +238,7 @@ class JobInjector:
         while True:
             
             while j < len(self.job_list):
-                job_started = True
+                job_started = False
                 job_id, job = self.job_list[j]
                 self.dataset_counter += 1
                 host_nodes = self.AllAvailableNodes(job)
@@ -277,6 +277,7 @@ class JobInjector:
                         job.ids_nodes.append(host)
                         job.starting_times.append(rep['starting_time'])
                         job.nb_task_not_lunched -=1
+                        job_started = True
                     else:
                         job_started=False
                             
@@ -565,7 +566,7 @@ class JobInjector:
                     else:
                         job.ids_nodes.remove(task.host_node)
 
-                if job.nb_task_not_lunched > 0 and len(nb_available_nodes) != 0:
+                if job.nb_task_not_lunched > 0 and nb_available_nodes != 0:
                     end = False
                     added = self.addNewTaskOnNewNode(job_id,job.transfert_time)
                     if added: 
