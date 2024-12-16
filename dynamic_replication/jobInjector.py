@@ -285,11 +285,11 @@ class JobInjector:
                     j+=1
                     self.waiting_list.append((job_id, job))
 
-                self.startOtherTasksWithoutReplication()
+                self.startOtherTaskIfNodeAvailabel()
 
             _ = self.injectJobs(self.job_list)
             
-            self.startOtherTasksWithoutReplication()
+            self.startOtherTaskIfNodeAvailabel()
 
             if len(self.job_executed) == self.nb_arriving_job:
                 print("========= All jobs executed")
@@ -573,6 +573,7 @@ class JobInjector:
                         job.nb_replicas +=1
                         job.nb_task_not_lunched -=1
                         print(f'une replica ajouter au job {job_id}')
+                        available_nodes = self.AllAvailableNodes()
                 z+=1       
 
             if end: delete.append(job_id)
