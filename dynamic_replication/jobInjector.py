@@ -34,8 +34,11 @@ import numpy as np
 import time
 import requests
 import os
+from pathlib import Path
+import shutil
 import threading
 import random
+from pathlib import Path
 #random.seed(1)
 
 class JobInjector:
@@ -241,9 +244,9 @@ class JobInjector:
                 job_started = True
                 job_id, job = self.job_list[j]
                 self.dataset_counter += 1
-                host_nodes = self.AllAvailableNodes(job)
+                host_nodes = self.getAvailabledNodes()
                 host_with_replica = []
-                if len(host_nodes) != self.nb_nodes:# and len(host_nodes) == job.nb_task:
+                if len(host_nodes) == self.nb_nodes:# and len(host_nodes) == job.nb_task:
                     for i, host in enumerate(host_nodes):
                         
                         r, t_transfert = self.replicateForAllNode(host, job_id, job.id_dataset, job.size_dataset)
@@ -260,7 +263,7 @@ class JobInjector:
                         else: 
                             print("no replica sended")
                     for i,host in enumerate(host_nodes):
-                        
+                        if i >= job.nb_task: break
                         rep, latency = self.sendTaskToNode(host, job_id, job.tasks_list[i].execution_time,job.id_dataset)
                         if rep['started']:
                             
@@ -366,7 +369,6 @@ class JobInjector:
                 print("========= All jobs executed")
                 break
 
-
     def AllNodesNeeded(self,job:Job):
         availabel_nodes = self.getAvailabledNodes()
         if len(availabel_nodes) >  job.nb_task:
@@ -375,7 +377,7 @@ class JobInjector:
             return copy.deepcopy(availabel_nodes)
         else: 
             return []
-    
+
     def AllAvailableNodes(self,job:Job):
         availabel_nodes = self.getAvailabledNodes()
         if len(availabel_nodes) >  job.nb_task:
@@ -383,7 +385,6 @@ class JobInjector:
         elif len(availabel_nodes) <= job.nb_task:
             return copy.deepcopy(availabel_nodes)
 
-    
     def reschedulOtherTasks(self):
         """
             in this strategies we can adapte the strategies of replicating to avoid having a blocked state
@@ -481,7 +482,6 @@ class JobInjector:
                 self.df_jobs = self.df_jobs[self.df_jobs["arriving_time"] > a_time]
         return self.job_list
     
-
     def injectJobsOnProcess(self, job_list):
 
         while self.index < self.nb_arriving_job:
@@ -510,7 +510,6 @@ class JobInjector:
             self.df_jobs = self.df_jobs[self.df_jobs["arriving_time"] != a_time]
         return self.job_list
     
-
     def replicateWithInjectingJobs(self,):
         """
             in this function i will inject 10 job on the infrastructure
@@ -678,13 +677,12 @@ class JobInjector:
                 task = job.tasks_list[i]
 
                 if task.state != "Finished": end = False
-                if  task.state == "Started" and task.starting_time + task.execution_time < time.time():
+                if task.state == "Started" and task.starting_time + task.execution_time < time.time():
                     #end = False
                     print(f"========= task on job {job_id} finished")
                     self.writeOutput(f"Task {task.task_id} on job {job_id} finished")
                     task.state = "Finished"
                     job.execution_time = task.execution_time
-                    #t_time = transfertTime(BANDWIDTH, self.graphe_infos[self.id][task.host_node], job.size_dataset)
                     self.wrtieStatsOnTasks(f"{job_id},{task.task_id},{task.host_node},{task.starting_time},{task.execution_time + task.starting_time},{task.execution_time},{task.id_dataset},{job.transfert_time}")
                     if job.nb_task_not_lunched > 0: #arrived here
                         for n_task in job.tasks_list:
@@ -707,6 +705,7 @@ class JobInjector:
                     else:
                         job.ids_nodes.remove(task.host_node)
                 z+=1       
+
 
             if end: delete.append(job_id)
 
@@ -1191,10 +1190,23 @@ class JobInjector:
 
     def getTime(self):
         return time.time() - self.exp_start_time
-        
+
+
+def copyFiles(source, dest):
+    source = Path(source)
+    destination = dest
+
+    # Copy all .txt files
+    for file in source.glob("*.txt"):
+        try:
+            shutil.copy(file, f"/tmp/{dest}")
+            print(f"Copied: {file} -> {destination}")
+        except Exception as e:
+            print(f"Failed to copy {file}: {e}")
+
 if __name__ == "__main__":
 
-    data = {'IP_ADDRESS': '172.16.97.9', 'graphe_infos': [[ -1., 100., 100., 100., 100., 100., 100., 100., 100., 100., 100.],
+    data = {'IP_ADDRESS': '172.16.193.6', 'graphe_infos': [[ -1., 100., 100., 100., 100., 100., 100., 100., 100., 100., 100.],
        [100.,  -1., 100., 100., 100., 100., 100., 100., 100., 100., 100.],
        [100., 100.,  -1., 100., 100., 100., 100., 100., 100., 100., 100.],
        [100., 100., 100.,  -1., 100., 100., 100., 100., 100., 100., 100.],
@@ -1204,8 +1216,7 @@ if __name__ == "__main__":
        [100., 100., 100., 100., 100., 100., 100.,  -1., 100., 100., 100.],
        [100., 100., 100., 100., 100., 100., 100., 100.,  -1., 100., 100.],
        [100., 100., 100., 100., 100., 100., 100., 100., 100.,  -1., 100.],
-       [100., 100., 100., 100., 100., 100., 100., 100., 100., 100.,  -1.]], 'IPs_ADDRESS': ['172.16.97.17', '172.16.97.19', '172.16.97.2', '172.16.97.25', '172.16.97.28', '172.16.97.3', '172.16.97.5', '172.16.97.6', '172.16.97.7', '172.16.97.8'], 'infos': {0: {'latency': 100.0, 'id': 0, 'node_ip': '172.16.97.17', 'node_port': 8880}, 1: {'latency': 100.0, 'id': 1, 'node_ip': '172.16.97.19', 'node_port': 8881}, 2: {'latency': 100.0, 'id': 2, 'node_ip': '172.16.97.2', 'node_port': 8882}, 3: {'latency': 100.0, 'id': 3, 'node_ip': '172.16.97.25', 'node_port': 8883}, 4: {'latency': 100.0, 'id': 4, 'node_ip': '172.16.97.28', 'node_port': 8884}, 5: {'latency': 100.0, 'id': 5, 'node_ip': '172.16.97.3', 'node_port': 8885}, 6: {'latency': 100.0, 'id': 6, 'node_ip': '172.16.97.5', 'node_port': 8886}, 7: {'latency': 100.0, 'id': 7, 'node_ip': '172.16.97.6', 'node_port': 8887}, 8: {'latency': 100.0, 'id': 8, 'node_ip': '172.16.97.7', 'node_port': 8888}, 9: {'latency': 100.0, 'id': 9, 'node_ip': '172.16.97.8', 'node_port': 8889}}}
-    
+       [100., 100., 100., 100., 100., 100., 100., 100., 100., 100.,  -1.]], 'IPs_ADDRESS': ['172.16.193.12', '172.16.193.18', '172.16.193.2', '172.16.193.20', '172.16.193.23', '172.16.193.34', '172.16.193.35', '172.16.193.37', '172.16.193.4', '172.16.193.45'], 'infos': {0: {'latency': 100.0, 'id': 0, 'node_ip': '172.16.193.12', 'node_port': 8880}, 1: {'latency': 100.0, 'id': 1, 'node_ip': '172.16.193.18', 'node_port': 8881}, 2: {'latency': 100.0, 'id': 2, 'node_ip': '172.16.193.2', 'node_port': 8882}, 3: {'latency': 100.0, 'id': 3, 'node_ip': '172.16.193.20', 'node_port': 8883}, 4: {'latency': 100.0, 'id': 4, 'node_ip': '172.16.193.23', 'node_port': 8884}, 5: {'latency': 100.0, 'id': 5, 'node_ip': '172.16.193.34', 'node_port': 8885}, 6: {'latency': 100.0, 'id': 6, 'node_ip': '172.16.193.35', 'node_port': 8886}, 7: {'latency': 100.0, 'id': 7, 'node_ip': '172.16.193.37', 'node_port': 8887}, 8: {'latency': 100.0, 'id': 8, 'node_ip': '172.16.193.4', 'node_port': 8888}, 9: {'latency': 100.0, 'id': 9, 'node_ip': '172.16.193.45', 'node_port': 8889}}}
 
 
     job_injector = JobInjector(
@@ -1218,8 +1229,50 @@ if __name__ == "__main__":
     
     
     job_injector.nodes_infos = data["infos"]
-    job_injector.SimulateArrivingJobsWithMaxReplication()
-                
+
+
+    #Exp 1 dyanmic replication
+    job_injector.SimulateArrivingJobs()
+    try:
+        os.makedirs("/tmp/DynamicReplicaExp", exist_ok=True)
+        print(f"Directory DynamicReplicaExp created successfully.")
+    except OSError as error:
+        print(f"Error creating directory: {error}")
+
+    copyFiles('/tmp/',"/tmp/DynamicReplicaExp" )
+
+
+    #Exp 2 Full replication
+    job_injector.SimulateArrivingJobsWithStaticReplicaFactor()
+    try:
+        os.makedirs("/tmp/FullReplicationExp", exist_ok=True)
+        print(f"Directory FullReplicationExp created successfully.")
+    except OSError as error:
+        print(f"Error creating directory: {error}")
+
+    copyFiles('/tmp/',"/tmp/FullReplicationExp" )
+
+
+    #Exp 3 One replication
+    job_injector.SimulateArrivingJobsWithStaticReplicaFactor()
+    try:
+        os.makedirs("/tmp/OneReplicationExp", exist_ok=True)
+        print(f"Directory OneReplicationExp created successfully.")
+    except OSError as error:
+        print(f"Error creating directory: {error}")
+
+    copyFiles('/tmp/',"/tmp/OneReplicationExp" )
+
+
+    #Exp 4 Replicate if availabel
+    job_injector.SimulateArrivingJobsWithSemiDynamic()
+    try:
+        os.makedirs("/tmp/IfAvailabelExp", exist_ok=True)
+        print(f"Directory IfAvailabelExp created successfully.")
+    except OSError as error:
+        print(f"Error creating directory: {error}")
+
+    copyFiles('/tmp/',"/tmp/IfAvailabelExp" )
             
 
 
