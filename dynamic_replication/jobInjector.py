@@ -85,6 +85,76 @@ class JobInjector:
         self.nb_arriving_job = self.df_jobs.shape[0]
         self.end = False
         self.job_executed = []
+    
+
+    def SimulateArrivingJobsWithStaticReplicaFactor(self,lambda_rate=1,job_to_inject = 10):
+        if not self.nodes_infos:
+            return False
+        self.exp_start_time = time.time()
+
+        self.job_list = []
+        j = 0
+        i_job = 0
+        inter_arrival_time = 2
+        current_time = 0
+
+        while True:
+            
+            while j < len(self.job_list):
+
+                job_started = False                
+                job_id, job = self.job_list[j]
+                self.dataset_counter += 1                
+                host_nodes = self.selectHostsNodes()                
+                host_with_replica = []
+
+                for i, host in enumerate(host_nodes):
+                    r, t_transfert = self.replicate(host, job_id, job.id_dataset, job.size_dataset)
+                    if r: 
+                        job.nb_replicas +=1
+                        job.job_starting_time = time.time()
+                        print(f"{i+1} Replica sended")
+                        self.writeOutput(f"Replica of dataset {job.id_dataset} sended to {host}")
+                        host_with_replica.append(host)
+                        t_start = time.time()
+                        job.transfert_time = transfertTime(BANDWIDTH, 100, job.size_dataset)
+                        self.wrtieStatsOnTasks(f"{-1},{job_id},{host},{t_start},{t_start + job.transfert_time},{job.transfert_time},{job.id_dataset}")
+                    else: 
+                        print("no replica sended")
+
+                for i,host in enumerate(host_with_replica):
+                    rep, latency = self.sendTaskToNode(host, job_id, job.tasks_list[i].execution_time,job.id_dataset)
+                    if rep['started']:
+                        
+                        self.writeOutput(f"Job {job_id} started")
+                        self.writeOutput(f"Task {i} of job {job_id} started on node {host}")
+                        print("========= Job started")
+                        print(f"========= Task of job {job_id} started on node {host}")
+                        job.tasks_list[i].starting_time = rep['starting_time']+job.transfert_time
+                        job.tasks_list[i].host_node = host
+                        job.tasks_list[i].executed = True
+                        job.tasks_list[i].state = "Started"
+                        job.executing_tasks.append((i, job.tasks_list[i].task_id))
+                        self.running_tasks.append((job_id, job.tasks_list[i].task_id, job.tasks_list[i].starting_time, job.tasks_list[i].execution_time, job.tasks_list[i].host_node))
+                        job.ids_nodes.append(host)
+                        job_started = True
+                        job.starting_times.append(rep['starting_time'])
+                        job.nb_task_not_lunched -=1
+                        
+                if job_started:
+                    self.running_job[job_id] = job
+                    self.waiting_list.append((job_id, job))
+                    j+=1
+                self.startOtherTasksWithoutReplication()
+
+            ## inject n jobs
+            _ = self.injectJobs(self.job_list)
+            self.startOtherTasksWithoutReplication()
+            if len(self.running_job.keys()) == 0 and self.index >= self.nb_arriving_job:
+                print("========= All jobs executed")
+                break
+
+        print(j, len(self.job_list))
 
     def SimulateArrivingJobs(self,lambda_rate=1,job_to_inject = 10):
         if not self.nodes_infos:
@@ -171,9 +241,9 @@ class JobInjector:
                 job_started = True
                 job_id, job = self.job_list[j]
                 self.dataset_counter += 1
-                host_nodes = self.AllNodesNeeded(job)
+                host_nodes = self.AllAvailableNodes(job)
                 host_with_replica = []
-                if len(host_nodes) != 0 and len(host_nodes) == job.nb_task:
+                if len(host_nodes) != self.nb_nodes:# and len(host_nodes) == job.nb_task:
                     for i, host in enumerate(host_nodes):
                         
                         r, t_transfert = self.replicateForAllNode(host, job_id, job.id_dataset, job.size_dataset)
@@ -1148,7 +1218,7 @@ if __name__ == "__main__":
     
     
     job_injector.nodes_infos = data["infos"]
-    job_injector.SimulateArrivingJobs()
+    job_injector.SimulateArrivingJobsWithMaxReplication()
                 
             
 
