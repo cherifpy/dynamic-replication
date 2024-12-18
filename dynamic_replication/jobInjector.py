@@ -1239,7 +1239,7 @@ if __name__ == "__main__":
     except OSError as error:
         print(f"Error creating directory: {error}")
 
-    copyFiles('/tmp/',"/tmp/DynamicReplicaExp" )
+    copyFiles('/tmp/',"DynamicReplicaExp/" )
 
 
     #Exp 2 Full replication
@@ -1250,7 +1250,7 @@ if __name__ == "__main__":
     except OSError as error:
         print(f"Error creating directory: {error}")
 
-    copyFiles('/tmp/',"/tmp/FullReplicationExp" )
+    copyFiles('/tmp/',"FullReplicationExp/" )
 
 
     #Exp 3 One replication
@@ -1261,7 +1261,7 @@ if __name__ == "__main__":
     except OSError as error:
         print(f"Error creating directory: {error}")
 
-    copyFiles('/tmp/',"/tmp/OneReplicationExp" )
+    copyFiles('/tmp/',"OneReplicationExp/" )
 
 
     #Exp 4 Replicate if availabel
@@ -1272,7 +1272,7 @@ if __name__ == "__main__":
     except OSError as error:
         print(f"Error creating directory: {error}")
 
-    copyFiles('/tmp/',"/tmp/IfAvailabelExp" )
+    copyFiles('/tmp/',"IfAvailabelExp/" )
             
 
 
