@@ -1232,6 +1232,16 @@ if __name__ == "__main__":
 
 
     #Exp 1 dyanmic replication
+    job_injector = JobInjector(
+        nb_nodes = NB_NODES,
+        graphe= data["graphe_infos"],
+        ip=data["IP_ADDRESS"],
+        local_execution=False
+    )
+    job_injector.writeOutput(f"{data}")
+    
+    
+    job_injector.nodes_infos = data["infos"]
     job_injector.SimulateArrivingJobs()
     try:
         os.makedirs("/tmp/DynamicReplicaExp", exist_ok=True)
@@ -1243,6 +1253,16 @@ if __name__ == "__main__":
 
 
     #Exp 2 Full replication
+    job_injector = JobInjector(
+        nb_nodes = NB_NODES,
+        graphe= data["graphe_infos"],
+        ip=data["IP_ADDRESS"],
+        local_execution=False
+    )
+    job_injector.writeOutput(f"{data}")
+    
+    
+    job_injector.nodes_infos = data["infos"]
     job_injector.SimulateArrivingJobsWithStaticReplicaFactor()
     try:
         os.makedirs("/tmp/FullReplicationExp", exist_ok=True)
@@ -1254,6 +1274,16 @@ if __name__ == "__main__":
 
 
     #Exp 3 One replication
+    job_injector = JobInjector(
+        nb_nodes = NB_NODES,
+        graphe= data["graphe_infos"],
+        ip=data["IP_ADDRESS"],
+        local_execution=False
+    )
+    job_injector.writeOutput(f"{data}")
+    
+    
+    job_injector.nodes_infos = data["infos"]
     job_injector.SimulateArrivingJobsWithStaticReplicaFactor()
     try:
         os.makedirs("/tmp/OneReplicationExp", exist_ok=True)
@@ -1265,6 +1295,16 @@ if __name__ == "__main__":
 
 
     #Exp 4 Replicate if availabel
+    job_injector = JobInjector(
+        nb_nodes = NB_NODES,
+        graphe= data["graphe_infos"],
+        ip=data["IP_ADDRESS"],
+        local_execution=False
+    )
+    job_injector.writeOutput(f"{data}")
+    
+    
+    job_injector.nodes_infos = data["infos"]
     job_injector.SimulateArrivingJobsWithSemiDynamic()
     try:
         os.makedirs("/tmp/IfAvailabelExp", exist_ok=True)
