@@ -1206,7 +1206,7 @@ def copyFiles(source, dest):
 
 if __name__ == "__main__":
 
-    data = {'IP_ADDRESS': '172.16.193.6', 'graphe_infos': [[ -1., 100., 100., 100., 100., 100., 100., 100., 100., 100., 100.],
+    data = {'IP_ADDRESS': '172.16.193.8', 'graphe_infos': [[ -1., 100., 100., 100., 100., 100., 100., 100., 100., 100., 100.],
        [100.,  -1., 100., 100., 100., 100., 100., 100., 100., 100., 100.],
        [100., 100.,  -1., 100., 100., 100., 100., 100., 100., 100., 100.],
        [100., 100., 100.,  -1., 100., 100., 100., 100., 100., 100., 100.],
@@ -1216,23 +1216,11 @@ if __name__ == "__main__":
        [100., 100., 100., 100., 100., 100., 100.,  -1., 100., 100., 100.],
        [100., 100., 100., 100., 100., 100., 100., 100.,  -1., 100., 100.],
        [100., 100., 100., 100., 100., 100., 100., 100., 100.,  -1., 100.],
-       [100., 100., 100., 100., 100., 100., 100., 100., 100., 100.,  -1.]], 'IPs_ADDRESS': ['172.16.193.12', '172.16.193.18', '172.16.193.2', '172.16.193.20', '172.16.193.23', '172.16.193.34', '172.16.193.35', '172.16.193.37', '172.16.193.4', '172.16.193.45'], 'infos': {0: {'latency': 100.0, 'id': 0, 'node_ip': '172.16.193.12', 'node_port': 8880}, 1: {'latency': 100.0, 'id': 1, 'node_ip': '172.16.193.18', 'node_port': 8881}, 2: {'latency': 100.0, 'id': 2, 'node_ip': '172.16.193.2', 'node_port': 8882}, 3: {'latency': 100.0, 'id': 3, 'node_ip': '172.16.193.20', 'node_port': 8883}, 4: {'latency': 100.0, 'id': 4, 'node_ip': '172.16.193.23', 'node_port': 8884}, 5: {'latency': 100.0, 'id': 5, 'node_ip': '172.16.193.34', 'node_port': 8885}, 6: {'latency': 100.0, 'id': 6, 'node_ip': '172.16.193.35', 'node_port': 8886}, 7: {'latency': 100.0, 'id': 7, 'node_ip': '172.16.193.37', 'node_port': 8887}, 8: {'latency': 100.0, 'id': 8, 'node_ip': '172.16.193.4', 'node_port': 8888}, 9: {'latency': 100.0, 'id': 9, 'node_ip': '172.16.193.45', 'node_port': 8889}}}
-
-
-    job_injector = JobInjector(
-        nb_nodes = NB_NODES,
-        graphe= data["graphe_infos"],
-        ip=data["IP_ADDRESS"],
-        local_execution=False
-    )
-    job_injector.writeOutput(f"{data}")
+       [100., 100., 100., 100., 100., 100., 100., 100., 100., 100.,  -1.]], 'IPs_ADDRESS': ['172.16.193.11', '172.16.193.19', '172.16.193.23', '172.16.193.24', '172.16.193.25', '172.16.193.3', '172.16.193.31', '172.16.193.34', '172.16.193.42', '172.16.193.48'], 'infos': {0: {'latency': 100.0, 'id': 0, 'node_ip': '172.16.193.11', 'node_port': 8880}, 1: {'latency': 100.0, 'id': 1, 'node_ip': '172.16.193.19', 'node_port': 8881}, 2: {'latency': 100.0, 'id': 2, 'node_ip': '172.16.193.23', 'node_port': 8882}, 3: {'latency': 100.0, 'id': 3, 'node_ip': '172.16.193.24', 'node_port': 8883}, 4: {'latency': 100.0, 'id': 4, 'node_ip': '172.16.193.25', 'node_port': 8884}, 5: {'latency': 100.0, 'id': 5, 'node_ip': '172.16.193.3', 'node_port': 8885}, 6: {'latency': 100.0, 'id': 6, 'node_ip': '172.16.193.31', 'node_port': 8886}, 7: {'latency': 100.0, 'id': 7, 'node_ip': '172.16.193.34', 'node_port': 8887}, 8: {'latency': 100.0, 'id': 8, 'node_ip': '172.16.193.42', 'node_port': 8888}, 9: {'latency': 100.0, 'id': 9, 'node_ip': '172.16.193.48', 'node_port': 8889}}}
     
-    
-    job_injector.nodes_infos = data["infos"]
-
 
     #Exp 1 dyanmic replication
-    job_injector = JobInjector(
+    """job_injector = JobInjector(
         nb_nodes = NB_NODES,
         graphe= data["graphe_infos"],
         ip=data["IP_ADDRESS"],
@@ -1249,7 +1237,7 @@ if __name__ == "__main__":
     except OSError as error:
         print(f"Error creating directory: {error}")
 
-    copyFiles('/tmp/',"DynamicReplicaExp/" )
+    copyFiles('/tmp/',"DynamicReplicaExp/" )"""
 
 
     #Exp 2 Full replication
@@ -1263,7 +1251,7 @@ if __name__ == "__main__":
     
     
     job_injector.nodes_infos = data["infos"]
-    job_injector.SimulateArrivingJobsWithStaticReplicaFactor()
+    job_injector.SimulateArrivingJobsWithMaxReplication()
     try:
         os.makedirs("/tmp/FullReplicationExp", exist_ok=True)
         print(f"Directory FullReplicationExp created successfully.")
@@ -1274,7 +1262,7 @@ if __name__ == "__main__":
 
 
     #Exp 3 One replication
-    job_injector = JobInjector(
+    """job_injector = JobInjector(
         nb_nodes = NB_NODES,
         graphe= data["graphe_infos"],
         ip=data["IP_ADDRESS"],
@@ -1291,11 +1279,11 @@ if __name__ == "__main__":
     except OSError as error:
         print(f"Error creating directory: {error}")
 
-    copyFiles('/tmp/',"OneReplicationExp/" )
+    copyFiles('/tmp/',"OneReplicationExp/" )"""
 
 
     #Exp 4 Replicate if availabel
-    job_injector = JobInjector(
+    """job_injector = JobInjector(
         nb_nodes = NB_NODES,
         graphe= data["graphe_infos"],
         ip=data["IP_ADDRESS"],
@@ -1312,7 +1300,7 @@ if __name__ == "__main__":
     except OSError as error:
         print(f"Error creating directory: {error}")
 
-    copyFiles('/tmp/',"IfAvailabelExp/" )
+    copyFiles('/tmp/',"IfAvailabelExp/" )"""
             
 
 
