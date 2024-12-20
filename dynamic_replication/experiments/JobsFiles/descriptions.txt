@@ -1,0 +1,15 @@
+
+## jobs5 
+5 job 
+
+## jobs1000
+100 jobs
+nb_task 1, 5
+time 0.1 a 2
+dataset 2000, 5000 ko
+
+
+## JObs Exp15
+nb_tasks = np.random.randint(1, 20)  
+time = np.random.uniform(0.5, 11)  
+dataset_size = np.random.randint(10000, 100000)     
