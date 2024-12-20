@@ -135,6 +135,7 @@ class Configuration:
                 
 
                 #
+    
     def deployRedis(self, port=5555, storage=90, eviction=False):
         self.db_listening_port = port 
         if self.execution_local:
