@@ -110,12 +110,14 @@ class JobInjector:
                 self.dataset_counter += 1                
                 host_nodes = self.selectHostsNodes()                
                 host_with_replica = []
+                if len(host_nodes) != 0:
+                    job.job_starting_time = time.time()
 
                 for i, host in enumerate(host_nodes):
                     r, t_transfert = self.replicate(host, job_id, job.id_dataset, job.size_dataset)
                     if r: 
                         job.nb_replicas +=1
-                        job.job_starting_time = time.time()
+                        #job.job_starting_time = time.time()
                         print(f"{i+1} Replica sended")
                         self.writeOutput(f"Replica of dataset {job.id_dataset} sended to {host}")
                         host_with_replica.append(host)
@@ -179,12 +181,13 @@ class JobInjector:
                 self.dataset_counter += 1                
                 host_nodes = self.selectHostsNodes()                
                 host_with_replica = []
-
+                if len(host_nodes) != 0:
+                    job.job_starting_time = time.time()
                 for i, host in enumerate(host_nodes):
                     r, t_transfert = self.replicate(host, job_id, job.id_dataset, job.size_dataset)
                     if r: 
                         job.nb_replicas +=1
-                        job.job_starting_time = time.time()
+                        #job.job_starting_time = time.time()
                         print(f"{i+1} Replica sended")
                         self.writeOutput(f"Replica of dataset {job.id_dataset} sended to {host}")
                         host_with_replica.append(host)
@@ -246,13 +249,15 @@ class JobInjector:
                 self.dataset_counter += 1
                 host_nodes = self.getAvailabledNodes()
                 host_with_replica = []
-                if len(host_nodes) == self.nb_nodes:# and len(host_nodes) == job.nb_task:
+                if (self.nb_nodes <= job.nb_task and len(host_nodes) == self.nb_nodes) or len(host_nodes) == job.nb_task:# and len(host_nodes) == job.nb_task:
+                    if len(host_nodes) != 0:
+                        job.job_starting_time = time.time()
                     for i, host in enumerate(host_nodes):
                         
                         r, t_transfert = self.replicateForAllNode(host, job_id, job.id_dataset, job.size_dataset)
                         if r: 
                             job.nb_replicas +=1
-                            job.job_starting_time = time.time()
+                            #job.job_starting_time = time.time()
                             print(f"{i+1} Replica sended")
                             self.writeOutput(f"Replica of dataset {job.id_dataset} sended to {host}")
                             host_with_replica.append(host)
@@ -316,13 +321,14 @@ class JobInjector:
                 self.dataset_counter += 1
                 host_nodes = self.AllAvailableNodes(job)
                 host_with_replica = []
-                
+                if len(host_nodes) != 0:
+                    job.job_starting_time = time.time()
                 for i, host in enumerate(host_nodes):
                     
                     r, t_transfert = self.replicateForAllNode(host, job_id, job.id_dataset, job.size_dataset)
                     if r: 
                         job.nb_replicas +=1
-                        job.job_starting_time = time.time()
+                        #job.job_starting_time = time.time()
                         print(f"{i+1} Replica sended")
                         self.writeOutput(f"Replica of dataset {job.id_dataset} sended to {host}")
                         host_with_replica.append(host)
@@ -443,12 +449,13 @@ class JobInjector:
                         job.nb_task_not_lunched -=1
                         print(f'une replica ajouter au job {job_id}')                 
 
-            if end: delete.append(job_id)
+            if end: 
+                job.finishing_time = time.time()
+                delete.append(job_id)
 
         for id in delete :
             print(f"========= job {id} finished")
             job = self.running_job[id]
-            job.finishing_time = time.time()
             self.writeStates(f"{job.id},{job.nb_task},{job.execution_time},{job.arriving_time},{job.job_starting_time},{job.finishing_time},{job.size_dataset},{job.transfert_time},{job.nb_replicas}")
             self.historiques[id] = copy.deepcopy(self.running_job[id])
             del self.running_job[id]
@@ -575,12 +582,14 @@ class JobInjector:
                         print(f'une replica ajouter au job {job_id}')
                 z+=1       
 
-            if end: delete.append(job_id)
+            if end: 
+                job.finishing_time = time.time()
+                delete.append(job_id)
 
         for id in delete :
             print(f"========= job {id} finished")
             job = self.running_job[id]
-            job.finishing_time = time.time()
+            #job.finishing_time = time.time()
             self.writeStates(f"{job.id},{job.nb_task},{job.execution_time},{job.arriving_time},{job.job_starting_time},{job.finishing_time},{job.size_dataset},{job.transfert_time},{job.nb_replicas}")
             self.historiques[id] = copy.deepcopy(self.running_job[id])
             del self.running_job[id]
@@ -646,7 +655,9 @@ class JobInjector:
                         nb_available_nodes = self.nbAvailabelNodes()
                 z+=1       
 
-            if end: delete.append(job_id)
+            if end: 
+                job.finishing_time = time.time()
+                delete.append(job_id)
 
         for id in delete :
             print(f"========= job {id} finished")
@@ -1220,7 +1231,7 @@ if __name__ == "__main__":
     
 
     #Exp 1 dyanmic replication
-    """job_injector = JobInjector(
+    job_injector = JobInjector(
         nb_nodes = NB_NODES,
         graphe= data["graphe_infos"],
         ip=data["IP_ADDRESS"],
@@ -1237,7 +1248,7 @@ if __name__ == "__main__":
     except OSError as error:
         print(f"Error creating directory: {error}")
 
-    copyFiles('/tmp/',"DynamicReplicaExp/" )"""
+    copyFiles('/tmp/',"DynamicReplicaExp/" )
 
 
     #Exp 2 Full replication
@@ -1262,7 +1273,7 @@ if __name__ == "__main__":
 
 
     #Exp 3 One replication
-    """job_injector = JobInjector(
+    job_injector = JobInjector(
         nb_nodes = NB_NODES,
         graphe= data["graphe_infos"],
         ip=data["IP_ADDRESS"],
@@ -1279,11 +1290,11 @@ if __name__ == "__main__":
     except OSError as error:
         print(f"Error creating directory: {error}")
 
-    copyFiles('/tmp/',"OneReplicationExp/" )"""
+    copyFiles('/tmp/',"OneReplicationExp/" )
 
 
     #Exp 4 Replicate if availabel
-    """job_injector = JobInjector(
+    job_injector = JobInjector(
         nb_nodes = NB_NODES,
         graphe= data["graphe_infos"],
         ip=data["IP_ADDRESS"],
@@ -1300,7 +1311,7 @@ if __name__ == "__main__":
     except OSError as error:
         print(f"Error creating directory: {error}")
 
-    copyFiles('/tmp/',"IfAvailabelExp/" )"""
+    copyFiles('/tmp/',"IfAvailabelExp/" )
             
 
 
