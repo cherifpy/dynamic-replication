@@ -1230,7 +1230,7 @@ if __name__ == "__main__":
        [100., 100., 100., 100., 100., 100., 100., 100., 100., 100.,  -1.]], 'IPs_ADDRESS': ['172.16.193.12', '172.16.193.13', '172.16.193.16', '172.16.193.2', '172.16.193.20', '172.16.193.21', '172.16.193.22', '172.16.193.23', '172.16.193.24', '172.16.193.25'], 'infos': {0: {'latency': 100.0, 'id': 0, 'node_ip': '172.16.193.12', 'node_port': 8880}, 1: {'latency': 100.0, 'id': 1, 'node_ip': '172.16.193.13', 'node_port': 8881}, 2: {'latency': 100.0, 'id': 2, 'node_ip': '172.16.193.16', 'node_port': 8882}, 3: {'latency': 100.0, 'id': 3, 'node_ip': '172.16.193.2', 'node_port': 8883}, 4: {'latency': 100.0, 'id': 4, 'node_ip': '172.16.193.20', 'node_port': 8884}, 5: {'latency': 100.0, 'id': 5, 'node_ip': '172.16.193.21', 'node_port': 8885}, 6: {'latency': 100.0, 'id': 6, 'node_ip': '172.16.193.22', 'node_port': 8886}, 7: {'latency': 100.0, 'id': 7, 'node_ip': '172.16.193.23', 'node_port': 8887}, 8: {'latency': 100.0, 'id': 8, 'node_ip': '172.16.193.24', 'node_port': 8888}, 9: {'latency': 100.0, 'id': 9, 'node_ip': '172.16.193.25', 'node_port': 8889}}}
     
     #Exp 1 dyanmic replication
-    job_injector = JobInjector(
+    """job_injector = JobInjector(
         nb_nodes = NB_NODES,
         graphe= data["graphe_infos"],
         ip=data["IP_ADDRESS"],
@@ -1247,21 +1247,21 @@ if __name__ == "__main__":
     except OSError as error:
         print(f"Error creating directory: {error}")
 
-    copyFiles('/tmp/',"DynamicReplicaExp/" )
+    copyFiles('/tmp/',"DynamicReplicaExp/" )"""
 
 
     #Exp 2 Full replication
-    job_injector = JobInjector(
+    job_injector2 = JobInjector(
         nb_nodes = NB_NODES,
         graphe= data["graphe_infos"],
         ip=data["IP_ADDRESS"],
         local_execution=False
     )
-    job_injector.writeOutput(f"{data}")
+    job_injector2.writeOutput(f"{data}")
     
     
-    job_injector.nodes_infos = data["infos"]
-    job_injector.SimulateArrivingJobsWithMaxReplication()
+    job_injector2nodes_infos = data["infos"]
+    job_injector2.SimulateArrivingJobsWithMaxReplication()
     try:
         os.makedirs("/tmp/FullReplicationExp", exist_ok=True)
         print(f"Directory FullReplicationExp created successfully.")
@@ -1272,17 +1272,17 @@ if __name__ == "__main__":
 
 
     #Exp 3 One replication
-    job_injector = JobInjector(
+    job_injector_ = JobInjector(
         nb_nodes = NB_NODES,
         graphe= data["graphe_infos"],
         ip=data["IP_ADDRESS"],
         local_execution=False
     )
-    job_injector.writeOutput(f"{data}")
+    job_injector_.writeOutput(f"{data}")
     
     
-    job_injector.nodes_infos = data["infos"]
-    job_injector.SimulateArrivingJobsWithStaticReplicaFactor()
+    job_injector_.nodes_infos = data["infos"]
+    job_injector_.SimulateArrivingJobsWithStaticReplicaFactor()
     try:
         os.makedirs("/tmp/OneReplicationExp", exist_ok=True)
         print(f"Directory OneReplicationExp created successfully.")
@@ -1293,17 +1293,17 @@ if __name__ == "__main__":
 
 
     #Exp 4 Replicate if availabel
-    job_injector = JobInjector(
+    job_injector1 = JobInjector(
         nb_nodes = NB_NODES,
         graphe= data["graphe_infos"],
         ip=data["IP_ADDRESS"],
         local_execution=False
     )
-    job_injector.writeOutput(f"{data}")
+    job_injector1.writeOutput(f"{data}")
     
     
-    job_injector.nodes_infos = data["infos"]
-    job_injector.SimulateArrivingJobsWithSemiDynamic()
+    job_injector1.nodes_infos = data["infos"]
+    job_injector1.SimulateArrivingJobsWithSemiDynamic()
     try:
         os.makedirs("/tmp/IfAvailabelExp", exist_ok=True)
         print(f"Directory IfAvailabelExp created successfully.")
