@@ -249,7 +249,7 @@ class JobInjector:
                 self.dataset_counter += 1
                 host_nodes = self.getAvailabledNodes()
                 host_with_replica = []
-                if (self.nb_nodes <= job.nb_task and len(host_nodes) == self.nb_nodes) or len(host_nodes) == job.nb_task:# and len(host_nodes) == job.nb_task:
+                if (self.nb_nodes <= job.nb_task and len(host_nodes) == self.nb_nodes) or len(host_nodes) >= job.nb_task:# and len(host_nodes) == job.nb_task:
                     if len(host_nodes) != 0:
                         job.job_starting_time = time.time()
                     for i, host in enumerate(host_nodes):
@@ -1217,7 +1217,8 @@ def copyFiles(source, dest):
 
 if __name__ == "__main__":
 
-    data = {'IP_ADDRESS': '172.16.193.7', 'graphe_infos': [[ -1., 100., 100., 100., 100., 100., 100., 100., 100., 100., 100.],
+    data = {'IP_ADDRESS': '172.16.193.7', 'graphe_infos': [
+       [ -1., 100., 100., 100., 100., 100., 100., 100., 100., 100., 100.],
        [100.,  -1., 100., 100., 100., 100., 100., 100., 100., 100., 100.],
        [100., 100.,  -1., 100., 100., 100., 100., 100., 100., 100., 100.],
        [100., 100., 100.,  -1., 100., 100., 100., 100., 100., 100., 100.],
