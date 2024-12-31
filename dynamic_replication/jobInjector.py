@@ -179,7 +179,7 @@ class JobInjector:
                 job_started = False                
                 job_id, job = self.job_list[j]
                 self.dataset_counter += 1                
-                host_nodes = self.selectHostsNodes()                
+                host_nodes = self.selectInitNodes()                
                 host_with_replica = []
                 if len(host_nodes) != 0:
                     job.job_starting_time = time.time()
@@ -1059,6 +1059,23 @@ class JobInjector:
             print(availabel_nodes)
             return copy.deepcopy([random.choice(availabel_nodes)]) if NB_REPLICAS_INIT == 1 else copy.deepcopy(random.sample(availabel_nodes, NB_REPLICAS_INIT))
     
+    def selectInitNodes(self, nb_tasks):
+
+        availabel_nodes = self.getAvailabledNodes()
+        if NB_REPLICAS_INIT > nb_tasks:
+            if len(availabel_nodes)> nb_tasks:
+                return copy.deepcopy(random.sample(availabel_nodes, nb_tasks))
+            else:
+                return copy.deepcopy(availabel_nodes)
+        else:
+            if len(availabel_nodes) == NB_REPLICAS_INIT:
+                return copy.deepcopy(availabel_nodes)
+            elif len(availabel_nodes) > NB_REPLICAS_INIT:
+                return copy.deepcopy(random.sample(availabel_nodes, NB_REPLICAS_INIT))
+            else:
+                return []
+    
+
     def getAvailabledNodes(self): 
         nodes = [id for id in range(self.nb_nodes)]
         for i, job_id in enumerate(self.running_job.keys()):
@@ -1217,7 +1234,7 @@ def copyFiles(source, dest):
 
 if __name__ == "__main__":
 
-    data = {'IP_ADDRESS': '172.16.193.45', 'graphe_infos': [[ -1., 100., 100., 100., 100., 100., 100., 100., 100., 100., 100.],
+    data = {'IP_ADDRESS': '172.16.193.9', 'graphe_infos': [[ -1., 100., 100., 100., 100., 100., 100., 100., 100., 100., 100.],
        [100.,  -1., 100., 100., 100., 100., 100., 100., 100., 100., 100.],
        [100., 100.,  -1., 100., 100., 100., 100., 100., 100., 100., 100.],
        [100., 100., 100.,  -1., 100., 100., 100., 100., 100., 100., 100.],
@@ -1227,9 +1244,11 @@ if __name__ == "__main__":
        [100., 100., 100., 100., 100., 100., 100.,  -1., 100., 100., 100.],
        [100., 100., 100., 100., 100., 100., 100., 100.,  -1., 100., 100.],
        [100., 100., 100., 100., 100., 100., 100., 100., 100.,  -1., 100.],
-       [100., 100., 100., 100., 100., 100., 100., 100., 100., 100.,  -1.]], 'IPs_ADDRESS': ['172.16.193.2', '172.16.193.20', '172.16.193.22', '172.16.193.24', '172.16.193.26', '172.16.193.31', '172.16.193.33', '172.16.193.34', '172.16.193.35', '172.16.193.43'], 'infos': {0: {'latency': 100.0, 'id': 0, 'node_ip': '172.16.193.2', 'node_port': 8880}, 1: {'latency': 100.0, 'id': 1, 'node_ip': '172.16.193.20', 'node_port': 8881}, 2: {'latency': 100.0, 'id': 2, 'node_ip': '172.16.193.22', 'node_port': 8882}, 3: {'latency': 100.0, 'id': 3, 'node_ip': '172.16.193.24', 'node_port': 8883}, 4: {'latency': 100.0, 'id': 4, 'node_ip': '172.16.193.26', 'node_port': 8884}, 5: {'latency': 100.0, 'id': 5, 'node_ip': '172.16.193.31', 'node_port': 8885}, 6: {'latency': 100.0, 'id': 6, 'node_ip': '172.16.193.33', 'node_port': 8886}, 7: {'latency': 100.0, 'id': 7, 'node_ip': '172.16.193.34', 'node_port': 8887}, 8: {'latency': 100.0, 'id': 8, 'node_ip': '172.16.193.35', 'node_port': 8888}, 9: {'latency': 100.0, 'id': 9, 'node_ip': '172.16.193.43', 'node_port': 8889}}}
+       [100., 100., 100., 100., 100., 100., 100., 100., 100., 100.,  -1.]], 'IPs_ADDRESS': ['172.16.193.10', '172.16.193.12', '172.16.193.15', '172.16.193.16', '172.16.193.20', '172.16.193.27', '172.16.193.29', '172.16.193.35', '172.16.193.45', '172.16.193.6'], 'infos': {0: {'latency': 100.0, 'id': 0, 'node_ip': '172.16.193.10', 'node_port': 8880}, 1: {'latency': 100.0, 'id': 1, 'node_ip': '172.16.193.12', 'node_port': 8881}, 2: {'latency': 100.0, 'id': 2, 'node_ip': '172.16.193.15', 'node_port': 8882}, 3: {'latency': 100.0, 'id': 3, 'node_ip': '172.16.193.16', 'node_port': 8883}, 4: {'latency': 100.0, 'id': 4, 'node_ip': '172.16.193.20', 'node_port': 8884}, 5: {'latency': 100.0, 'id': 5, 'node_ip': '172.16.193.27', 'node_port': 8885}, 6: {'latency': 100.0, 'id': 6, 'node_ip': '172.16.193.29', 'node_port': 8886}, 7: {'latency': 100.0, 'id': 7, 'node_ip': '172.16.193.35', 'node_port': 8887}, 8: {'latency': 100.0, 'id': 8, 'node_ip': '172.16.193.45', 'node_port': 8888}, 9: {'latency': 100.0, 'id': 9, 'node_ip': '172.16.193.6', 'node_port': 8889}}}
 
-    #Exp 1 dyanmic replication
+
+    #Exp 1 2 replica initial
+    NB_REPLICAS_INIT = 2
     job_injector = JobInjector(
         nb_nodes = NB_NODES,
         graphe= data["graphe_infos"],
@@ -1247,8 +1266,30 @@ if __name__ == "__main__":
     except OSError as error:
         print(f"Error creating directory: {error}")
 
-    copyFiles('/tmp/',"DynamicReplicaExp/" )
+    copyFiles('/tmp/',"DynamicReplica2INITExp/" )
 
+    #Exp 2 3 replica init
+    NB_REPLICAS_INIT = 3
+    job_injector = JobInjector(
+        nb_nodes = NB_NODES,
+        graphe= data["graphe_infos"],
+        ip=data["IP_ADDRESS"],
+        local_execution=False
+    )
+    job_injector.writeOutput(f"{data}")
+    
+    
+    job_injector.nodes_infos = data["infos"]
+    job_injector.SimulateArrivingJobs()
+    try:
+        os.makedirs("/tmp/DynamicReplicaExp", exist_ok=True)
+        print(f"Directory DynamicReplicaExp created successfully.")
+    except OSError as error:
+        print(f"Error creating directory: {error}")
+
+    copyFiles('/tmp/',"DynamicReplica3INITExp/" )
+
+    """
 
     #Exp 2 Full replication
     job_injector1 = JobInjector(
@@ -1270,7 +1311,7 @@ if __name__ == "__main__":
 
     copyFiles('/tmp/',"FullReplicationExp/")
 
-
+    
     #Exp 3 One replication
     job_injector2 = JobInjector(
         nb_nodes = NB_NODES,
@@ -1310,7 +1351,7 @@ if __name__ == "__main__":
     except OSError as error:
         print(f"Error creating directory: {error}")
 
-    copyFiles('/tmp/',"IfAvailabelExp/")
+    copyFiles('/tmp/',"IfAvailabelExp/")"""
             
 
 
