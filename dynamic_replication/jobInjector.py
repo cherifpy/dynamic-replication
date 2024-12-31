@@ -179,7 +179,7 @@ class JobInjector:
                 job_started = False                
                 job_id, job = self.job_list[j]
                 self.dataset_counter += 1                
-                host_nodes = self.selectInitNodes()                
+                host_nodes = self.selectInitNodes(job.nb_task)                
                 host_with_replica = []
                 if len(host_nodes) != 0:
                     job.job_starting_time = time.time()
