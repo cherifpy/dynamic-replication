@@ -1234,7 +1234,7 @@ def copyFiles(source, dest):
 
 if __name__ == "__main__":
 
-    data = {'IP_ADDRESS': '172.16.193.9', 'graphe_infos': [[ -1., 100., 100., 100., 100., 100., 100., 100., 100., 100., 100.],
+    data = {'IP_ADDRESS': '172.16.97.7', 'graphe_infos': [[ -1., 100., 100., 100., 100., 100., 100., 100., 100., 100., 100.],
        [100.,  -1., 100., 100., 100., 100., 100., 100., 100., 100., 100.],
        [100., 100.,  -1., 100., 100., 100., 100., 100., 100., 100., 100.],
        [100., 100., 100.,  -1., 100., 100., 100., 100., 100., 100., 100.],
@@ -1244,9 +1244,9 @@ if __name__ == "__main__":
        [100., 100., 100., 100., 100., 100., 100.,  -1., 100., 100., 100.],
        [100., 100., 100., 100., 100., 100., 100., 100.,  -1., 100., 100.],
        [100., 100., 100., 100., 100., 100., 100., 100., 100.,  -1., 100.],
-       [100., 100., 100., 100., 100., 100., 100., 100., 100., 100.,  -1.]], 'IPs_ADDRESS': ['172.16.193.10', '172.16.193.12', '172.16.193.15', '172.16.193.16', '172.16.193.20', '172.16.193.27', '172.16.193.29', '172.16.193.35', '172.16.193.45', '172.16.193.6'], 'infos': {0: {'latency': 100.0, 'id': 0, 'node_ip': '172.16.193.10', 'node_port': 8880}, 1: {'latency': 100.0, 'id': 1, 'node_ip': '172.16.193.12', 'node_port': 8881}, 2: {'latency': 100.0, 'id': 2, 'node_ip': '172.16.193.15', 'node_port': 8882}, 3: {'latency': 100.0, 'id': 3, 'node_ip': '172.16.193.16', 'node_port': 8883}, 4: {'latency': 100.0, 'id': 4, 'node_ip': '172.16.193.20', 'node_port': 8884}, 5: {'latency': 100.0, 'id': 5, 'node_ip': '172.16.193.27', 'node_port': 8885}, 6: {'latency': 100.0, 'id': 6, 'node_ip': '172.16.193.29', 'node_port': 8886}, 7: {'latency': 100.0, 'id': 7, 'node_ip': '172.16.193.35', 'node_port': 8887}, 8: {'latency': 100.0, 'id': 8, 'node_ip': '172.16.193.45', 'node_port': 8888}, 9: {'latency': 100.0, 'id': 9, 'node_ip': '172.16.193.6', 'node_port': 8889}}}
+       [100., 100., 100., 100., 100., 100., 100., 100., 100., 100.,  -1.]], 'IPs_ADDRESS': ['172.16.97.12', '172.16.97.15', '172.16.97.18', '172.16.97.19', '172.16.97.2', '172.16.97.20', '172.16.97.21', '172.16.97.25', '172.16.97.26', '172.16.97.4'], 'infos': {0: {'latency': 100.0, 'id': 0, 'node_ip': '172.16.97.12', 'node_port': 8880}, 1: {'latency': 100.0, 'id': 1, 'node_ip': '172.16.97.15', 'node_port': 8881}, 2: {'latency': 100.0, 'id': 2, 'node_ip': '172.16.97.18', 'node_port': 8882}, 3: {'latency': 100.0, 'id': 3, 'node_ip': '172.16.97.19', 'node_port': 8883}, 4: {'latency': 100.0, 'id': 4, 'node_ip': '172.16.97.2', 'node_port': 8884}, 5: {'latency': 100.0, 'id': 5, 'node_ip': '172.16.97.20', 'node_port': 8885}, 6: {'latency': 100.0, 'id': 6, 'node_ip': '172.16.97.21', 'node_port': 8886}, 7: {'latency': 100.0, 'id': 7, 'node_ip': '172.16.97.25', 'node_port': 8887}, 8: {'latency': 100.0, 'id': 8, 'node_ip': '172.16.97.26', 'node_port': 8888}, 9: {'latency': 100.0, 'id': 9, 'node_ip': '172.16.97.4', 'node_port': 8889}}}
 
-
+    """    
     #Exp 1 2 replica initial
     NB_REPLICAS_INIT = 2
     job_injector = JobInjector(
@@ -1287,11 +1287,11 @@ if __name__ == "__main__":
     except OSError as error:
         print(f"Error creating directory: {error}")
 
-    copyFiles('/tmp/',"DynamicReplica3INITExp/" )
+    copyFiles('/tmp/',"DynamicReplica3INITExp/" )"""
 
-    """
+    
 
-    #Exp 2 Full replication
+    """#Exp 2 Full replication
     job_injector1 = JobInjector(
         nb_nodes = NB_NODES,
         graphe= data["graphe_infos"],
@@ -1332,7 +1332,7 @@ if __name__ == "__main__":
 
     copyFiles('/tmp/',"OneReplicationExp/")
 
-
+    """
     #Exp 4 Replicate if availabel
     job_injector3 = JobInjector(
         nb_nodes = NB_NODES,
@@ -1351,7 +1351,7 @@ if __name__ == "__main__":
     except OSError as error:
         print(f"Error creating directory: {error}")
 
-    copyFiles('/tmp/',"IfAvailabelExp/")"""
+    copyFiles('/tmp/',"IfAvailabelExp/")
             
 
 
